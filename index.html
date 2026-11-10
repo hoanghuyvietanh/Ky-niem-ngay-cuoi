@@ -255,10 +255,20 @@
       <input type="text" id="cfg-music" placeholder="NoiNayCoAnh.mp3">
       <div class="hint">Tên file phải nằm cùng thư mục với index.html trên GitHub.</div>
     </div>
+    <div class="form-group"><label>Cloudinary - Cloud name:</label><input type="text" id="cfg-cloud" placeholder="p7pz6jna"></div>
+    <div class="form-group"><label>Cloudinary - Upload preset (Unsigned):</label><input type="text" id="cfg-preset" placeholder="Ky-niem-ngay-cuoi"></div>
     <button class="btn" type="button" id="btnSaveConfig">Lưu cài đặt chung</button>
 
     <h2 class="sec">Thêm ảnh mới</h2>
     <div class="form-group"><label>Năm kỷ niệm:</label><input type="number" id="img-year" value="2026"></div>
+    <div class="form-group">
+      <label>Chọn ảnh từ máy (chọn được nhiều ảnh):</label>
+      <input type="file" id="img-files" accept="image/*" multiple>
+      <div class="hint">Trang tự thu nhỏ ảnh, tải lên Cloudinary và thêm vào năm đã nhập ở trên. Lời tựa bên dưới (nếu có) áp dụng cho tất cả ảnh vừa chọn.</div>
+    </div>
+    <button class="btn gold" type="button" id="btnUpload">Tải ảnh lên và thêm vào năm này</button>
+    <div class="hint" id="upMsg" style="margin:8px 0 20px;min-height:1.2em"></div>
+    <div class="hint" style="margin-bottom:12px">— hoặc dán link ảnh có sẵn —</div>
     <div class="form-group">
       <label>Link ảnh:</label>
       <input type="text" id="img-url" placeholder="Dán link chia sẻ Google Drive hoặc link ảnh trực tiếp">
@@ -307,7 +317,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const safeUrl = u => /^(https?:\/\/|[\w][\w .\/-]*$)/i.test(u || "") ? u : "";
 
-const DEFAULTS = { names: ["Chồng", "Vợ"], weddingDate: "2024-11-20", musicUrl: "NoiNayCoAnh.mp3", anniversaries: [] };
+const DEFAULTS = { names: ["Chồng", "Vợ"], weddingDate: "2024-11-20", musicUrl: "NoiNayCoAnh.mp3", cloudName: "p7pz6jna", uploadPreset: "Ky-niem-ngay-cuoi", anniversaries: [] };
 let CONFIG = JSON.parse(JSON.stringify(DEFAULTS));
 let wd = new Date(DEFAULTS.weddingDate + "T00:00:00");
 let flat = [], cur = 0;
@@ -320,6 +330,8 @@ function normalize(d) {
     .map(a => ({ year: Number(a.year), photos: Array.isArray(a.photos) ? a.photos : [], note: a.note || "", location: a.location || "", letter: a.letter || "" }))
     .filter(a => Number.isInteger(a.year) && a.year >= 1900 && a.year <= 2200);
   c.musicUrl = c.musicUrl || DEFAULTS.musicUrl;
+  c.cloudName = c.cloudName || DEFAULTS.cloudName;
+  c.uploadPreset = c.uploadPreset || DEFAULTS.uploadPreset;
   c.weddingDate = c.weddingDate || DEFAULTS.weddingDate;
   return c;
 }
@@ -612,6 +624,8 @@ function showPanel() {
   $("#cfg-name2").value = CONFIG.names[1] || "";
   $("#cfg-date").value = CONFIG.weddingDate || "";
   $("#cfg-music").value = CONFIG.musicUrl || "";
+  $("#cfg-cloud").value = CONFIG.cloudName || "";
+  $("#cfg-preset").value = CONFIG.uploadPreset || "";
   $("#adminMsg").style.display = "none";
   fillYearInfo();
   $("#admin-panel").style.display = "block";
@@ -629,9 +643,78 @@ async function saveConfig() {
   const date = $("#cfg-date").value;
   if (!date) return adminMsg("Vui lòng chọn ngày cưới.", false);
   try {
-    await saveAll({ names: [$("#cfg-name1").value.trim() || "Chồng", $("#cfg-name2").value.trim() || "Vợ"], weddingDate: date, musicUrl: $("#cfg-music").value.trim() || DEFAULTS.musicUrl });
+    await saveAll({
+      names: [$("#cfg-name1").value.trim() || "Chồng", $("#cfg-name2").value.trim() || "Vợ"],
+      weddingDate: date,
+      musicUrl: $("#cfg-music").value.trim() || DEFAULTS.musicUrl,
+      cloudName: $("#cfg-cloud").value.trim() || DEFAULTS.cloudName,
+      uploadPreset: $("#cfg-preset").value.trim() || DEFAULTS.uploadPreset
+    });
     adminMsg("Đã lưu cài đặt chung.", true);
   } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
+}
+
+/* ----- Tải ảnh từ máy lên Cloudinary (thu nhỏ trước khi tải) ----- */
+async function shrinkImage(file, maxSide, quality) {
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const k = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", quality));
+    return blob && blob.size < file.size ? blob : file;
+  } catch (e) { return file; }   // định dạng trình duyệt không đọc được (vd HEIC): gửi ảnh gốc
+}
+
+async function uploadToCloudinary(blob, name) {
+  const cloud = CONFIG.cloudName, preset = CONFIG.uploadPreset;
+  const fd = new FormData();
+  fd.append("file", blob, name);
+  fd.append("upload_preset", preset);
+  const res = await fetch("https://api.cloudinary.com/v1_1/" + encodeURIComponent(cloud) + "/image/upload", { method: "POST", body: fd });
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok || !data.secure_url) throw new Error((data.error && data.error.message) || ("HTTP " + res.status));
+  return data.secure_url.replace("/upload/", "/upload/f_auto,q_auto,w_1600/");
+}
+
+let uploading = false;
+async function uploadPhotos() {
+  if (uploading) return;
+  const year = parseInt($("#img-year").value, 10);
+  const files = Array.from($("#img-files").files || []);
+  const msg = t => { $("#upMsg").textContent = t; };
+  if (isNaN(year) || year < 1900) return adminMsg("Năm không hợp lệ.", false);
+  if (!files.length) return adminMsg("Hãy chọn ít nhất một ảnh.", false);
+  if (!CONFIG.cloudName || !CONFIG.uploadPreset) return adminMsg("Chưa có Cloud name hoặc Upload preset.", false);
+  uploading = true; $("#btnUpload").disabled = true;
+  const caption = $("#img-cap").value.trim();
+  const done = [], failed = [];
+  for (let i = 0; i < files.length; i++) {
+    msg("Đang tải ảnh " + (i + 1) + "/" + files.length + "...");
+    try {
+      const blob = await shrinkImage(files[i], 1600, 0.82);
+      done.push({ src: await uploadToCloudinary(blob, files[i].name), caption: caption });
+    } catch (ex) { failed.push(files[i].name + " (" + ex.message + ")"); }
+  }
+  try {
+    if (done.length) {
+      const list = cloneYears();
+      let y = list.find(a => a.year === year);
+      if (!y) { y = { year: year, photos: [] }; list.push(y); }
+      y.photos.push(...done);
+      await saveAll({ anniversaries: list });
+    }
+    msg("");
+    $("#img-files").value = ""; $("#img-cap").value = "";
+    if (failed.length) adminMsg("Đã thêm " + done.length + " ảnh. Lỗi " + failed.length + " ảnh: " + failed.join("; ") + (/preset/i.test(failed.join()) ? " — kiểm tra preset đã đặt chế độ Unsigned chưa." : ""), false);
+    else adminMsg("Đã thêm " + done.length + " ảnh vào năm " + year + "!", true);
+  } catch (ex) {
+    adminMsg("Tải ảnh xong nhưng chưa lưu được vào dữ liệu: " + (ex.code || ex.message), false);
+  }
+  uploading = false; $("#btnUpload").disabled = false;
 }
 
 async function addPhoto() {
@@ -714,6 +797,7 @@ $("#photo-list").addEventListener("click", e => {
   if (b) deletePhoto(+b.dataset.year, +b.dataset.i);
 });
 $("#btnSaveConfig").onclick = saveConfig;
+$("#btnUpload").onclick = uploadPhotos;
 $("#btnAddPhoto").onclick = addPhoto;
 $("#btnSaveYear").onclick = saveYearInfo;
 $("#yi-year").addEventListener("input", fillYearInfo);
