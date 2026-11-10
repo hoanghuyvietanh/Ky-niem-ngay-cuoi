@@ -186,10 +186,10 @@ $("#musicToggle").onclick = () => {
 let clicks = 0;
 $("#foot").addEventListener("click", () => {
   clicks++;
-  if(clicks >= 5) {
+  if(clicks >= 2) {
     clicks = 0;
     const pwd = prompt("Nhập mật khẩu để mở khóa:");
-    if(pwd === "2011") { 
+    if(pwd === "Viet@nh17072001") { 
       $("#admin-panel").style.display = "block";
       $("#cfg-name1").value = CONFIG.names[0] || "";
       $("#cfg-name2").value = CONFIG.names[1] || "";
