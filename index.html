@@ -359,7 +359,7 @@ $("#years").addEventListener("keydown", e => {
 let taps = 0, tapTimer;
 $("#secret").addEventListener("click", () => {
   taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { taps = 0; }, 3000);
-  if (taps >= 5) { taps = 0; auth.currentUser ? showPanel() : ($("#login").style.display = "block"); }
+  if (taps >= 3) { taps = 0; auth.currentUser ? showPanel() : ($("#login").style.display = "block"); }
 });
 $("#login-close").onclick = () => { $("#login").style.display = "none"; };
 $("#admin-close").onclick = () => { $("#admin-panel").style.display = "none"; };
