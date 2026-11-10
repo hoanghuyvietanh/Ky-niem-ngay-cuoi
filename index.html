@@ -5,355 +5,243 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kỷ niệm ngày cưới</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- Thêm font Caveat cho chữ viết tay phong cách Polaroid -->
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Be+Vietnam+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Chỉ load Firebase App và Firestore -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
-  :root{
-    --bg:#fbf6f1; --ink:#3b2a2a; --muted:#8a7470; --rose:#c0626e; --rose-soft:#f3dcdc; --gold:#b8935a; --card:#ffffff;
-  }
+  /* CÁC CSS HIỂN THỊ GIAO DIỆN (GIỮ NGUYÊN) */
+  :root{ --bg:#fbf6f1; --ink:#3b2a2a; --muted:#8a7470; --rose:#c0626e; --rose-soft:#f3dcdc; --gold:#b8935a; --card:#ffffff; }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
   h1,h2,h3{font-family:'Playfair Display',serif;font-weight:500}
-
-  /* ===== NÚT NHẠC NỀN ===== */
-  .music-btn {
-    position: fixed; bottom: 20px; right: 20px; z-index: 100;
-    width: 48px; height: 48px; border-radius: 50%;
-    background: var(--rose); color: white; border: none;
-    box-shadow: 0 4px 12px rgba(192,98,110,0.4);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem; transition: transform 0.3s;
-  }
-  .music-btn.playing { animation: pulse 2s infinite; }
-  @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(192,98,110,0.7);} 70% {box-shadow: 0 0 0 15px rgba(192,98,110,0);} 100% {box-shadow: 0 0 0 0 rgba(192,98,110,0);} }
-
-  /* ===== HERO SILDESHOW ===== */
-  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-    padding:48px 20px;position:relative;overflow:hidden; z-index: 1;}
-  #hero-bg {
-    position: absolute; inset: 0; z-index: -1;
-    background-size: cover; background-position: center;
-    transition: background-image 2s ease-in-out;
-    opacity: 0.15; /* Làm mờ ảnh nền để nổi bật chữ */
-  }
+  
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 20px;position:relative;overflow:hidden; z-index: 1;}
   .hero .tag{letter-spacing:.35em;text-transform:uppercase;font-size:.75rem;color:var(--gold)}
   .hero h1{font-size:clamp(2.6rem,9vw,5.5rem);margin:14px 0 6px;color:var(--ink)}
   .hero h1 span{color:var(--rose);font-style:italic;font-weight:500}
   .hero .date{color:var(--muted);font-size:1.05rem}
-  
   .counter{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:36px 0 18px}
   .counter div{background:var(--card);border-radius:16px;padding:16px 18px;min-width:84px;box-shadow:0 6px 24px rgba(192,98,110,.12)}
   .counter b{display:block;font-family:'Playfair Display',serif;font-size:2rem;color:var(--rose);font-weight:700}
   .counter small{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.1em}
-  
-  /* Thống kê vui nhộn */
-  .fun-facts { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; font-size: 0.9rem; color: var(--rose); font-weight: 500;}
-  
-  .next{color:var(--muted);font-size:.95rem}
-  .next strong{color:var(--rose)}
-  .scroll{margin-top:40px;color:var(--gold);text-decoration:none;font-size:.85rem;letter-spacing:.2em;text-transform:uppercase;animation:bob 2s infinite}
-  @keyframes bob{50%{transform:translateY(6px)}}
   .heart{position:absolute;color:var(--rose);opacity:.18;animation:float linear infinite;user-select:none; z-index: -1;}
   @keyframes float{from{transform:translateY(105vh)}to{transform:translateY(-15vh)}}
 
-  /* ===== HIỆU ỨNG CUỘN (SCROLL REVEAL) ===== */
-  .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
-  .reveal.active { opacity: 1; transform: translateY(0); }
-
-  /* ===== TIMELINE ===== */
   main{max-width:1100px;margin:0 auto;padding:40px 18px 80px}
   .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px}
   .toolbar h2{font-size:1.8rem}
-  .toolbar button{border:1px solid var(--rose);background:transparent;color:var(--rose);padding:8px 16px;border-radius:999px;cursor:pointer;font-family:inherit}
-  .toolbar button:hover{background:var(--rose);color:#fff}
-  nav.years{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:34px}
-  nav.years a{padding:6px 14px;border-radius:999px;background:var(--rose-soft);color:var(--rose);text-decoration:none;font-size:.88rem}
-  nav.years a:hover{background:var(--rose);color:#fff}
-
   .year{position:relative;padding-left:34px;margin-bottom:64px;border-left:2px dashed #e3c9c9}
   .year::before{content:"♥";position:absolute;left:-12px;top:0;width:22px;height:22px;border-radius:50%;background:var(--bg);color:var(--rose);font-size:18px;line-height:22px;text-align:center}
-  
-  .badge-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px;}
   .badge{display:inline-block;background:var(--rose);color:#fff;border-radius:999px;padding:2px 14px;font-size:.8rem;letter-spacing:.08em}
-  .location{display:inline-block;background:var(--gold);color:#fff;border-radius:999px;padding:2px 14px;font-size:.8rem;letter-spacing:.05em}
-  
   .year h3{font-size:2rem;margin:8px 0 4px}
-  .year .note{color:var(--muted);max-width:640px;margin-bottom:12px}
-
-  /* Hộp thư bí mật */
-  .love-letter { margin-bottom: 24px; max-width: 640px; background: rgba(255,255,255,0.6); border-radius: 12px; padding: 10px 16px; }
-  .love-letter summary { cursor: pointer; color: var(--rose); font-weight: 500; outline: none; user-select: none; }
-  .love-letter .content { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e3c9c9; font-style: italic; color: var(--ink); font-size: 0.95rem; }
-
-  /* ===== POLAROID STYLE GRID ===== */
   .grid{columns:3 240px;column-gap:20px}
-  .ph{
-    break-inside:avoid; margin-bottom:20px; background:var(--card); cursor:zoom-in;
-    box-shadow:0 4px 16px rgba(59,42,42,.08); transition:transform .25s,box-shadow .25s;
-    position:relative; 
-    /* Thiết kế thẻ Polaroid */
-    padding: 12px 12px 60px 12px; 
-    border-radius: 4px;
-  }
-  .ph:nth-child(even) { transform: rotate(2deg); }
-  .ph:nth-child(odd) { transform: rotate(-2deg); }
-  .ph:hover{transform:translateY(-8px) rotate(0deg) scale(1.02) !important; box-shadow:0 12px 30px rgba(59,42,42,.15); z-index: 10;}
-  .ph img{width:100%;display:block; border-radius: 2px;}
-  
-  .ph .cap{
-    position:absolute; inset:auto 0 0 0; height: 60px;
-    display: flex; align-items: center; justify-content: center;
-    color:var(--ink); 
-    font-family: 'Caveat', cursive; /* Font viết tay */
-    font-size: 1.4rem; line-height: 1.2;
-  }
-  
-  .placeholder{aspect-ratio:4/5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;text-align:center;
-    background:linear-gradient(135deg,#f6e1e1,#f4ead7);color:var(--muted);font-size:.85rem; border-radius: 2px;}
-  .placeholder span{font-size:2rem}
-  .empty{padding:30px;border:2px dashed #e3c9c9;border-radius:14px;color:var(--muted);text-align:center}
+  .ph{break-inside:avoid; margin-bottom:20px; background:var(--card); padding: 12px 12px 60px 12px; box-shadow:0 4px 16px rgba(59,42,42,.08); position:relative;}
+  .ph img{width:100%;display:block;}
+  .ph .cap{position:absolute; inset:auto 0 0 0; height: 60px; display: flex; align-items: center; justify-content: center; font-family: 'Caveat', cursive; font-size: 1.4rem;}
+  footer{text-align:center;color:var(--muted);padding:30px 0 50px;font-size:.9rem; cursor:pointer;}
+  .music-btn {position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: var(--rose); color: white; border: none; font-size: 1.2rem; cursor:pointer;}
 
-  footer{text-align:center;color:var(--muted);padding:30px 0 50px;font-size:.9rem}
-
-  /* ===== LIGHTBOX ===== */
-  .lb{position:fixed;inset:0;background:rgba(20,12,12,.93);display:none;align-items:center;justify-content:center;z-index:500;flex-direction:column;padding:20px}
-  .lb.open{display:flex}
-  .lb img{max-width:94vw;max-height:78vh;border-radius:4px;box-shadow:0 10px 50px rgba(0,0,0,.5); border: 10px solid white; border-bottom-width: 40px;}
-  .lb .lcap{color:#111; position:absolute; bottom: calc(11vh + 10px); font-family: 'Caveat', cursive; font-size: 1.6rem;}
-  .lb button{position:absolute;background:rgba(255,255,255,.12);border:0;color:#fff;font-size:1.6rem;width:46px;height:46px;border-radius:50%;cursor:pointer}
-  .lb button:hover{background:rgba(255,255,255,.25)}
-  .lb .x{top:18px;right:18px}.lb .p{left:14px;top:50%}.lb .n{right:14px;top:50%}
+  /* ===== CSS ADMIN PANEL ===== */
+  #admin-panel {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
+    overflow-y: auto; padding: 20px; color: #333;
+  }
+  .admin-box { background: #fff; max-width: 600px; margin: 40px auto; padding: 30px; border-radius: 12px; }
+  .admin-box h2 { border-bottom: 2px solid var(--rose); padding-bottom: 10px; margin-bottom: 20px; }
+  .form-group { margin-bottom: 15px; }
+  .form-group label { display: block; font-weight: 500; margin-bottom: 5px; }
+  .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit;}
+  .btn-save { background: var(--rose); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; width: 100%;}
+  .btn-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+  #uploadStatus { color: green; font-weight: bold; margin-top: 10px; display: none;}
 </style>
 </head>
 <body>
 
-<!-- Nút bật/tắt nhạc -->
-<button id="musicToggle" class="music-btn" aria-label="Phát nhạc">🔇</button>
-<audio id="bgMusic" loop>
-  <source src="" type="audio/mpeg">
-</audio>
+<button id="musicToggle" class="music-btn">🔇</button>
+<audio id="bgMusic" loop></audio>
 
 <header class="hero" id="top">
-  <div id="hero-bg"></div> <!-- Hình nền mờ ảo thay đổi -->
   <div class="tag">Our Love Story</div>
-  <h1 id="names"></h1>
+  <h1 id="names">Đang tải dữ liệu...</h1>
   <div class="date" id="wdate"></div>
   <div class="counter" id="counter"></div>
-  <div class="fun-facts" id="funFacts"></div>
-  <div class="next" id="next"></div>
-  <a class="scroll" href="#timeline">Xem kỷ niệm ↓</a>
 </header>
 
 <main id="timeline">
-  <div class="toolbar">
-    <h2>Hành trình của chúng mình</h2>
-    <button id="sort">Cũ nhất trước ↕</button>
-  </div>
-  <nav class="years" id="yearNav"></nav>
+  <div class="toolbar"><h2>Hành trình của chúng mình</h2></div>
   <div id="years"></div>
 </main>
 
-<footer id="foot"></footer>
+<footer id="foot">Made with ♥ — Chạm 5 lần vào đây để sửa</footer> 
 
-<div class="lb" id="lb">
-  <button class="x" aria-label="Đóng">✕</button>
-  <button class="p" aria-label="Ảnh trước">‹</button>
-  <button class="n" aria-label="Ảnh sau">›</button>
-  <img id="lbImg" alt="">
-  <div class="lcap" id="lbCap"></div>
+<!-- ===== BẢNG ĐIỀU KHIỂN BÍ MẬT ===== -->
+<div id="admin-panel">
+  <div class="admin-box">
+    <button class="btn-close" onclick="closeAdmin()">✕</button>
+    <h2>Cài đặt Chung</h2>
+    <div class="form-group"><label>Tên chồng:</label><input type="text" id="cfg-name1"></div>
+    <div class="form-group"><label>Tên vợ:</label><input type="text" id="cfg-name2"></div>
+    <div class="form-group"><label>Ngày cưới (YYYY-MM-DD):</label><input type="date" id="cfg-date"></div>
+    <div class="form-group"><label>Link nhạc (MP3):</label><input type="text" id="cfg-music"></div>
+    <button class="btn-save" onclick="saveConfig()">Lưu Cài đặt Chung</button>
+
+    <h2 style="margin-top: 40px;">Thêm ảnh mới từ Link</h2>
+    <div class="form-group"><label>Năm kỷ niệm (vd: 2025):</label><input type="number" id="img-year" value="2025"></div>
+    <div class="form-group"><label>Link ảnh (từ Google Drive, Imgur...):</label><input type="text" id="img-url" placeholder="Dán link chia sẻ ảnh vào đây"></div>
+    <div class="form-group"><label>Lời tựa (Caption):</label><input type="text" id="img-cap" placeholder="Nhập ghi chú cho ảnh"></div>
+    <button class="btn-save" onclick="addPhoto()" style="background: var(--gold);">Thêm ảnh vào dòng thời gian</button>
+    <div id="uploadStatus">Đang lưu dữ liệu...</div>
+  </div>
 </div>
 
 <script>
 /* =====================================================================
-   ✏️  CẤU HÌNH THÔNG TIN KỶ NIỆM TẠI ĐÂY
+   🔥 DÁN FIREBASE CONFIG CỦA BẠN VÀO ĐÂY 🔥
    ===================================================================== */
-const CONFIG = {
-  names: ["Anh", "Em"],              
-  weddingDate: "2024-11-20",         
-  musicUrl: "NoiNayCoAnh.mp3", // Thay bằng link nhạc của bạn
-  heroImages: [ // Danh sách ảnh để làm slideshow mờ nền ở phần trên cùng
-    "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=2000&auto=format&fit=crop"
-  ],
-  funFacts: [ // Thống kê vui
-    { icon: "✈️", text: "12 chuyến du lịch" },
-    { icon: "🎬", text: "45 bộ phim đã xem" },
-    { icon: "🍕", text: "Vô số bữa ăn đêm" }
-  ],
-  anniversaries: [
-    {
-      year: 2025,
-      title: "Kỷ niệm 1 năm",
-      location: "📍 Phú Quốc", // Địa điểm (Tính năng mới)
-      note: "Một năm đầu tiên bên nhau, đầy ắp tiếng cười và những trải nghiệm mới.",
-      letter: "Gửi vợ yêu, 1 năm trôi qua thật nhanh. Cảm ơn em vì đã luôn bao dung và đồng hành cùng anh...", // Thư bí mật (Tính năng mới)
-      photos: [
-        { src: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=600&auto=format&fit=crop", caption: "Bữa tối lãng mạn" },
-        { src: "https://images.unsplash.com/photo-1529634454597-956d4a3aa5bc?q=80&w=600&auto=format&fit=crop", caption: "Hoàng hôn trên biển" },
-        { src: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=600&auto=format&fit=crop", caption: "Cùng nhau" }
-      ]
-    },
-    {
-      year: 2026,
-      title: "Kỷ niệm 2 năm",
-      location: "📍 Đà Lạt",
-      note: "Thêm một năm nữa, thêm nhiều yêu thương và trưởng thành.",
-      letter: "",
-      photos: [
-        { src: "https://images.unsplash.com/photo-1549416878-b9ca95e1bb88?q=80&w=600&auto=format&fit=crop", caption: "Góc quán quen" }
-      ]
-    }
-  ]
+const firebaseConfig = {
+  // Thay thế toàn bộ khối này bằng code lấy từ Project Settings của Firebase
+  apiKey: "AIzaSyB-xxxxxxx",
+  authDomain: "ky-niem-ngay-cuoi.firebaseapp.com",
+  projectId: "ky-niem-ngay-cuoi",
+  storageBucket: "ky-niem-ngay-cuoi.appspot.com",
+  messagingSenderId: "xxxxxx",
+  appId: "1:xxxxx:web:xxxxx"
 };
-/* ===================================================================== */
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let CONFIG = { names: ["Chồng", "Vợ"], weddingDate: "2024-11-20", musicUrl: "", anniversaries: [] };
+let wd = new Date();
+
+// Lắng nghe dữ liệu
+db.collection("settings").doc("main").onSnapshot((doc) => {
+  if (doc.exists) {
+    CONFIG = doc.data(); 
+    renderWebsite();     
+  } else {
+    db.collection("settings").doc("main").set(CONFIG);
+  }
+});
 
 const $ = s => document.querySelector(s);
-const wd = new Date(CONFIG.weddingDate + "T00:00:00");
-const fmt = d => d.toLocaleDateString("vi-VN",{day:"numeric",month:"long",year:"numeric"});
+function renderWebsite() {
+  wd = new Date(CONFIG.weddingDate + "T00:00:00");
+  $("#names").innerHTML = `${CONFIG.names[0]} <span>&</span> ${CONFIG.names[1]}`;
+  const fmt = d => d.toLocaleDateString("vi-VN",{day:"numeric",month:"long",year:"numeric"});
+  $("#wdate").textContent = "Ngày cưới: " + fmt(wd);
+  
+  const bgMusic = $("#bgMusic");
+  if(bgMusic.src !== CONFIG.musicUrl) bgMusic.src = CONFIG.musicUrl;
 
-/* ----- Nhạc Nền ----- */
-const bgMusic = $("#bgMusic");
-const musicBtn = $("#musicToggle");
-bgMusic.src = CONFIG.musicUrl;
+  const list = [...(CONFIG.anniversaries || [])].sort((a,b) => b.year - a.year);
+  $("#years").innerHTML = list.map(a => {
+    const photos = (a.photos||[]).map(p => `
+      <figure class="ph">
+        <img src="${p.src}" loading="lazy">
+        ${p.caption ? `<figcaption class="cap">${p.caption}</figcaption>` : ""}
+      </figure>`).join("");
+    return `<section class="year">
+      <span class="badge">${a.year}</span>
+      <h3>Kỷ niệm năm ${a.year}</h3>
+      <div class="grid">${photos}</div>
+    </section>`;
+  }).join("");
+}
+
+// Đồng hồ
+function tick(){
+  const now=new Date();
+  let y=now.getFullYear()-wd.getFullYear(); let m=now.getMonth()-wd.getMonth(); let d=now.getDate()-wd.getDate();
+  if(d<0){m--; d+=new Date(now.getFullYear(),now.getMonth(),0).getDate();}
+  if(m<0){y--; m+=12;}
+  const box=(n,l)=>`<div><b>${n}</b><small>${l}</small></div>`;
+  $("#counter").innerHTML = box(y,"năm")+box(m,"tháng")+box(d,"ngày");
+}
+setInterval(tick,1000);
+
+// Nhạc nền
 let isPlaying = false;
-musicBtn.onclick = () => {
-  if (isPlaying) { bgMusic.pause(); musicBtn.textContent = "🔇"; musicBtn.classList.remove("playing"); } 
-  else { bgMusic.play(); musicBtn.textContent = "🎵"; musicBtn.classList.add("playing"); }
+$("#musicToggle").onclick = () => {
+  if (isPlaying) { $("#bgMusic").pause(); $("#musicToggle").textContent = "🔇"; } 
+  else { $("#bgMusic").play(); $("#musicToggle").textContent = "🎵"; }
   isPlaying = !isPlaying;
 };
 
-/* ----- Hero Slideshow & Setup ----- */
-$("#names").innerHTML = `${CONFIG.names[0]} <span>&</span> ${CONFIG.names[1]}`;
-$("#wdate").textContent = "Ngày cưới: " + fmt(wd);
-$("#foot").textContent = `Made with ♥ — ${CONFIG.names[0]} & ${CONFIG.names[1]}`;
-document.title = `${CONFIG.names[0]} & ${CONFIG.names[1]} — Kỷ niệm`;
+// Mở Admin (Click 5 lần)
+let clicks = 0;
+$("#foot").addEventListener("click", () => {
+  clicks++;
+  if(clicks >= 5) {
+    clicks = 0;
+    const pwd = prompt("Nhập mật khẩu để mở khóa:");
+    if(pwd === "2011") { 
+      $("#admin-panel").style.display = "block";
+      $("#cfg-name1").value = CONFIG.names[0] || "";
+      $("#cfg-name2").value = CONFIG.names[1] || "";
+      $("#cfg-date").value = CONFIG.weddingDate || "";
+      $("#cfg-music").value = CONFIG.musicUrl || "";
+    } else {
+      alert("Sai mật khẩu!");
+    }
+  }
+});
+function closeAdmin() { $("#admin-panel").style.display = "none"; }
 
-// Fun facts
-if(CONFIG.funFacts && CONFIG.funFacts.length > 0){
-  $("#funFacts").innerHTML = CONFIG.funFacts.map(f => `<span>${f.icon} ${f.text}</span>`).join(" • ");
+function saveConfig() {
+  CONFIG.names[0] = $("#cfg-name1").value;
+  CONFIG.names[1] = $("#cfg-name2").value;
+  CONFIG.weddingDate = $("#cfg-date").value;
+  CONFIG.musicUrl = $("#cfg-music").value;
+  db.collection("settings").doc("main").update(CONFIG)
+    .then(() => alert("Đã lưu cài đặt!"))
+    .catch(err => alert("Lỗi: " + err.message));
 }
 
-// Chạy slideshow hình nền
-const heroBg = $("#hero-bg");
-if(CONFIG.heroImages && CONFIG.heroImages.length > 0){
-  let bgIdx = 0;
-  heroBg.style.backgroundImage = `url(${CONFIG.heroImages[bgIdx]})`;
-  setInterval(() => {
-    bgIdx = (bgIdx + 1) % CONFIG.heroImages.length;
-    heroBg.style.backgroundImage = `url(${CONFIG.heroImages[bgIdx]})`;
-  }, 5000);
-}
+// Xử lý thêm link ảnh
+async function addPhoto() {
+  const year = parseInt($("#img-year").value);
+  const caption = $("#img-cap").value;
+  let imgUrl = $("#img-url").value.trim();
 
-// Tim bay
-for(let i=0;i<14;i++){
-  const h=document.createElement("div");h.className="heart";h.textContent="♥";
-  h.style.left=Math.random()*100+"%";
-  h.style.fontSize=(14+Math.random()*30)+"px";
-  h.style.animationDuration=(12+Math.random()*16)+"s";
-  h.style.animationDelay=(-Math.random()*20)+"s";
-  $("#top").appendChild(h);
-}
+  if(!imgUrl) return alert("Vui lòng dán link ảnh!");
 
-/* ----- Bộ đếm thời gian ----- */
-function tick(){
-  const now=new Date();
-  let y=now.getFullYear()-wd.getFullYear();
-  let m=now.getMonth()-wd.getMonth();
-  let d=now.getDate()-wd.getDate();
-  if(d<0){m--; d+=new Date(now.getFullYear(),now.getMonth(),0).getDate();}
-  if(m<0){y--; m+=12;}
-  const days=Math.floor((now-wd)/864e5);
-  const box=(n,l)=>`<div><b>${n}</b><small>${l}</small></div>`;
-  $("#counter").innerHTML = box(y,"năm")+box(m,"tháng")+box(d,"ngày")+box(String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0")+":"+String(now.getSeconds()).padStart(2,"0"),"giờ");
-  
-  let next=new Date(now.getFullYear(),wd.getMonth(),wd.getDate());
-  if(next<new Date(now.getFullYear(),now.getMonth(),now.getDate())) next.setFullYear(next.getFullYear()+1);
-  const left=Math.round((next-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
-  const nth=next.getFullYear()-wd.getFullYear();
-  $("#next").innerHTML = left===0
-    ? `🎉 <strong>Hôm nay</strong> là kỷ niệm ${nth} năm! (${days.toLocaleString("vi-VN")} ngày bên nhau)`
-    : `Còn <strong>${left} ngày</strong> nữa là kỷ niệm ${nth} năm`;
-}
-tick(); setInterval(tick,1000);
+  const status = $("#uploadStatus");
+  status.style.display = "block";
+  status.style.color = "blue";
+  status.textContent = "Đang lưu dữ liệu...";
 
-/* ----- Scroll Observer cho hiệu ứng Reveal ----- */
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => { if(entry.isIntersecting) entry.target.classList.add('active'); });
-}, { threshold: 0.1 });
+  // THUẬT TOÁN: Tự động chuyển link Google Drive thành link ảnh hiển thị trực tiếp
+  const driveRegex = /\/file\/d\/([^\/]+)/;
+  const match = imgUrl.match(driveRegex);
+  if(match && match[1]) {
+    imgUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  }
 
-/* ----- Timeline & Render ----- */
-let newestFirst=true;
-let flat=[]; let cur=0;
-
-function render(){
-  const list=[...CONFIG.anniversaries].sort((a,b)=>newestFirst?b.year-a.year:a.year-b.year);
-  $("#sort").textContent = newestFirst ? "Cũ nhất trước ↕" : "Mới nhất trước ↕";
-  $("#yearNav").innerHTML = list.map(a=>`<a href="#y${a.year}">${a.year}</a>`).join("");
-  flat=[];
-  
-  $("#years").innerHTML = list.map(a=>{
-    const nth=a.year-wd.getFullYear();
-    const photos=(a.photos||[]).map(p=>{
-      const idx=flat.push({src:p.src,cap:p.caption||"",year:a.year})-1;
-      return `<figure class="ph reveal" data-i="${idx}">
-        <img src="${p.src}" alt="${p.caption||""}" loading="lazy">
-        ${p.caption?`<figcaption class="cap">${p.caption}</figcaption>`:""}
-      </figure>`;
-    }).join("");
+  try {
+    if (!CONFIG.anniversaries) CONFIG.anniversaries = [];
+    let yearData = CONFIG.anniversaries.find(a => a.year === year);
+    if (!yearData) {
+      yearData = { year: year, photos: [] };
+      CONFIG.anniversaries.push(yearData);
+    }
     
-    return `<section class="year reveal" id="y${a.year}">
-      <div class="badge-group">
-        <span class="badge">${a.year}${nth>0?` · năm thứ ${nth}`:""}</span>
-        ${a.location ? `<span class="location">${a.location}</span>` : ""}
-      </div>
-      <h3>${a.title||"Kỷ niệm "+a.year}</h3>
-      <p class="note">${a.note||""}</p>
-      ${a.letter ? `<details class="love-letter"><summary>💌 Đọc thư tình</summary><div class="content">${a.letter}</div></details>` : ""}
-      ${photos?`<div class="grid">${photos}</div>`:`<div class="empty">📷 Chưa có ảnh năm này!</div>`}
-    </section>`;
-  }).join("");
+    yearData.photos.push({ src: imgUrl, caption: caption });
+    await db.collection("settings").doc("main").update({ anniversaries: CONFIG.anniversaries });
 
-  // Kích hoạt animation cuộn cho các phần tử mới render
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // Lỗi ảnh placeholder
-  document.querySelectorAll(".ph img").forEach(img=>{
-    img.addEventListener("error",()=>{
-      const fig=img.closest(".ph");
-      img.replaceWith(Object.assign(document.createElement("div"),{
-        className:"placeholder",
-        innerHTML:`<span>🖼️</span>${fig.querySelector(".cap")?.textContent||"Ảnh kỷ niệm"}<small>${img.getAttribute("src")}</small>`
-      }));
-      fig.dataset.broken="1";
-    },{once:true});
-  });
+    status.style.color = "green";
+    status.textContent = "Thêm ảnh thành công! Đóng bảng này lại để xem.";
+    $("#img-url").value = ""; 
+    $("#img-cap").value = "";
+  } catch(err) {
+    status.style.color = "red";
+    status.textContent = "Lỗi: " + err.message;
+  }
 }
-
-$("#sort").onclick=()=>{newestFirst=!newestFirst;render();};
-$("#years").addEventListener("click",e=>{
-  const fig=e.target.closest(".ph");
-  if(fig && !fig.dataset.broken) open(+fig.dataset.i);
-});
-
-/* ----- Lightbox ----- */
-const lb=$("#lb");
-function show(){const p=flat[cur];$("#lbImg").src=p.src;$("#lbCap").textContent=(p.cap?p.cap:"");}
-function open(i){cur=i;show();lb.classList.add("open");}
-function close(){lb.classList.remove("open");}
-function step(d){cur=(cur+d+flat.length)%flat.length;show();}
-lb.querySelector(".x").onclick=close;
-lb.querySelector(".p").onclick=()=>step(-1);
-lb.querySelector(".n").onclick=()=>step(1);
-lb.addEventListener("click",e=>{if(e.target===lb)close();});
-document.addEventListener("keydown",e=>{
-  if(!lb.classList.contains("open"))return;
-  if(e.key==="Escape")close();
-  if(e.key==="ArrowLeft")step(-1);
-  if(e.key==="ArrowRight")step(1);
-});
-
-render();
 </script>
 </body>
 </html>
