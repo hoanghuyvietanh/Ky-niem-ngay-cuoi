@@ -6,12 +6,11 @@
 <title>Kỷ niệm ngày cưới</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Be+Vietnam+Pro:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- Chỉ load Firebase App và Firestore -->
+<!-- Tích hợp Firebase App và Firestore -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-  /* CÁC CSS HIỂN THỊ GIAO DIỆN (GIỮ NGUYÊN) */
   :root{ --bg:#fbf6f1; --ink:#3b2a2a; --muted:#8a7470; --rose:#c0626e; --rose-soft:#f3dcdc; --gold:#b8935a; --card:#ffffff; }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
@@ -53,7 +52,7 @@
   .admin-box h2 { border-bottom: 2px solid var(--rose); padding-bottom: 10px; margin-bottom: 20px; }
   .form-group { margin-bottom: 15px; }
   .form-group label { display: block; font-weight: 500; margin-bottom: 5px; }
-  .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit;}
+  .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit;}
   .btn-save { background: var(--rose); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; width: 100%;}
   .btn-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
   #uploadStatus { color: green; font-weight: bold; margin-top: 10px; display: none;}
@@ -82,6 +81,7 @@
 <div id="admin-panel">
   <div class="admin-box">
     <button class="btn-close" onclick="closeAdmin()">✕</button>
+    
     <h2>Cài đặt Chung</h2>
     <div class="form-group"><label>Tên chồng:</label><input type="text" id="cfg-name1"></div>
     <div class="form-group"><label>Tên vợ:</label><input type="text" id="cfg-name2"></div>
@@ -89,12 +89,21 @@
     <div class="form-group"><label>Link nhạc (MP3):</label><input type="text" id="cfg-music"></div>
     <button class="btn-save" onclick="saveConfig()">Lưu Cài đặt Chung</button>
 
-    <h2 style="margin-top: 40px;">Thêm ảnh mới từ Link</h2>
+    <h2 style="margin-top: 40px;">Thêm ảnh mới từ Link Google Drive</h2>
     <div class="form-group"><label>Năm kỷ niệm (vd: 2025):</label><input type="number" id="img-year" value="2025"></div>
-    <div class="form-group"><label>Link ảnh (từ Google Drive, Imgur...):</label><input type="text" id="img-url" placeholder="Dán link chia sẻ ảnh vào đây"></div>
+    <div class="form-group"><label>Link ảnh (Từ Google Drive):</label><input type="text" id="img-url" placeholder="Dán link chia sẻ ảnh vào đây"></div>
     <div class="form-group"><label>Lời tựa (Caption):</label><input type="text" id="img-cap" placeholder="Nhập ghi chú cho ảnh"></div>
     <button class="btn-save" onclick="addPhoto()" style="background: var(--gold);">Thêm ảnh vào dòng thời gian</button>
     <div id="uploadStatus">Đang lưu dữ liệu...</div>
+
+    <div id="delete-section">
+      <h2 style="margin-top: 40px; color: red;">Xóa dữ liệu</h2>
+      <div class="form-group">
+          <label>Chọn năm muốn xóa toàn bộ ảnh:</label>
+          <select id="delete-year-select"></select>
+      </div>
+      <button class="btn-save" onclick="deleteYearData()" style="background: red;">Xóa Năm Này</button>
+    </div>
   </div>
 </div>
 
@@ -103,7 +112,6 @@
    🔥 DÁN FIREBASE CONFIG CỦA BẠN VÀO ĐÂY 🔥
    ===================================================================== */
 const firebaseConfig = {
-  // Thay thế toàn bộ khối này bằng code lấy từ Project Settings của Firebase
   apiKey: "AIzaSyB-xxxxxxx",
   authDomain: "ky-niem-ngay-cuoi.firebaseapp.com",
   projectId: "ky-niem-ngay-cuoi",
@@ -118,7 +126,7 @@ const db = firebase.firestore();
 let CONFIG = { names: ["Chồng", "Vợ"], weddingDate: "2024-11-20", musicUrl: "", anniversaries: [] };
 let wd = new Date();
 
-// Lắng nghe dữ liệu
+// 1. Lắng nghe dữ liệu
 db.collection("settings").doc("main").onSnapshot((doc) => {
   if (doc.exists) {
     CONFIG = doc.data(); 
@@ -151,9 +159,11 @@ function renderWebsite() {
       <div class="grid">${photos}</div>
     </section>`;
   }).join("");
+
+  updateDeleteList();
 }
 
-// Đồng hồ
+// 2. Đồng hồ
 function tick(){
   const now=new Date();
   let y=now.getFullYear()-wd.getFullYear(); let m=now.getMonth()-wd.getMonth(); let d=now.getDate()-wd.getDate();
@@ -164,7 +174,7 @@ function tick(){
 }
 setInterval(tick,1000);
 
-// Nhạc nền
+// 3. Nhạc nền
 let isPlaying = false;
 $("#musicToggle").onclick = () => {
   if (isPlaying) { $("#bgMusic").pause(); $("#musicToggle").textContent = "🔇"; } 
@@ -172,7 +182,7 @@ $("#musicToggle").onclick = () => {
   isPlaying = !isPlaying;
 };
 
-// Mở Admin (Click 5 lần)
+// 4. Mở Admin (Click 5 lần)
 let clicks = 0;
 $("#foot").addEventListener("click", () => {
   clicks++;
@@ -192,6 +202,7 @@ $("#foot").addEventListener("click", () => {
 });
 function closeAdmin() { $("#admin-panel").style.display = "none"; }
 
+// 5. Lưu Cấu hình chung
 function saveConfig() {
   CONFIG.names[0] = $("#cfg-name1").value;
   CONFIG.names[1] = $("#cfg-name2").value;
@@ -202,7 +213,7 @@ function saveConfig() {
     .catch(err => alert("Lỗi: " + err.message));
 }
 
-// Xử lý thêm link ảnh
+// 6. Xử lý thêm link ảnh (Hỗ trợ lách luật Google Drive)
 async function addPhoto() {
   const year = parseInt($("#img-year").value);
   const caption = $("#img-cap").value;
@@ -215,11 +226,11 @@ async function addPhoto() {
   status.style.color = "blue";
   status.textContent = "Đang lưu dữ liệu...";
 
-  // THUẬT TOÁN: Tự động chuyển link Google Drive thành link ảnh hiển thị trực tiếp
-  const driveRegex = /\/file\/d\/([^\/]+)/;
-  const match = imgUrl.match(driveRegex);
-  if(match && match[1]) {
-    imgUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  // THUẬT TOÁN: Tự động trích xuất ID và ép thành link Thumbnail để không bị Google chặn
+  let driveIdMatch = imgUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || imgUrl.match(/id=([a-zA-Z0-9_-]+)/);
+  if (driveIdMatch && driveIdMatch[1]) {
+    // sz=w1000 giúp ảnh hiển thị độ phân giải cao
+    imgUrl = `https://drive.google.com/thumbnail?id=${driveIdMatch[1]}&sz=w1000`;
   }
 
   try {
@@ -241,6 +252,38 @@ async function addPhoto() {
     status.style.color = "red";
     status.textContent = "Lỗi: " + err.message;
   }
+}
+
+// 7. Cập nhật danh sách năm để xóa
+function updateDeleteList() {
+    const select = document.getElementById("delete-year-select");
+    select.innerHTML = "";
+    if(CONFIG.anniversaries && CONFIG.anniversaries.length > 0) {
+        CONFIG.anniversaries.forEach(a => {
+            const option = document.createElement("option");
+            option.value = a.year;
+            option.textContent = "Năm " + a.year;
+            select.appendChild(option);
+        });
+    } else {
+        select.innerHTML = "<option value=''>Chưa có dữ liệu năm nào</option>";
+    }
+}
+
+// 8. Xóa dữ liệu của một năm
+async function deleteYearData() {
+    const yearToDelete = parseInt($("#delete-year-select").value);
+    if(isNaN(yearToDelete)) return alert("Không có năm nào để xóa.");
+    
+    if(confirm(`Bạn có chắc chắn muốn xóa TOÀN BỘ ảnh của năm ${yearToDelete} không?`)) {
+        try {
+            CONFIG.anniversaries = CONFIG.anniversaries.filter(a => a.year !== yearToDelete);
+            await db.collection("settings").doc("main").update({ anniversaries: CONFIG.anniversaries });
+            alert(`Đã xóa dữ liệu năm ${yearToDelete} thành công!`);
+        } catch (err) {
+            alert("Lỗi khi xóa: " + err.message);
+        }
+    }
 }
 </script>
 </body>
