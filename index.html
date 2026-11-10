@@ -23,7 +23,8 @@
   h1,h2,h3{font-family:'Playfair Display',serif;font-weight:500}
 
   /* ===== HERO ===== */
-  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 20px;position:relative;overflow:hidden;z-index:1}
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 20px;position:relative;overflow:hidden;z-index:1;
+    background:radial-gradient(circle at 15% 20%,#f9e4e4 0,transparent 45%),radial-gradient(circle at 85% 85%,#f6ead6 0,transparent 45%)}
   .hero .tag{letter-spacing:.35em;text-transform:uppercase;font-size:.75rem;color:var(--gold)}
   .hero h1{font-size:clamp(2.6rem,9vw,5.5rem);margin:14px 0 6px;color:var(--ink)}
   .hero h1 span{color:var(--rose);font-style:italic;font-weight:500}
@@ -38,6 +39,37 @@
   .heart{position:absolute;color:var(--rose);opacity:.18;animation:float linear infinite;user-select:none;z-index:-1}
   @keyframes float{from{transform:translateY(105vh)}to{transform:translateY(-15vh)}}
 
+  /* --- nền hero: ảnh thật mờ dần, chuyển cảnh chậm --- */
+  .hero-bg{position:absolute;inset:0;z-index:-1;background-size:cover;background-position:center;opacity:0;transform:scale(1);transition:opacity 2s ease-in-out,transform 8s linear}
+  .hero-bg.on{opacity:.2;transform:scale(1.08)}
+  /* --- hiện dần khi mở trang --- */
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  .rise{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes bob{50%{transform:translateY(6px)}}
+  .scroll span{display:inline-block;animation:bob 2s infinite}
+  /* --- tim nổ khi chạm --- */
+  .pop{position:fixed;pointer-events:none;z-index:900;color:var(--rose);animation:pop 1.4s ease-out forwards}
+  @keyframes pop{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.2)}}
+  /* --- hiện dần khi cuộn tới --- */
+  .io .reveal{opacity:0;translate:0 36px;transition:opacity .8s ease,translate .8s cubic-bezier(.2,.7,.2,1)}
+  .io .reveal.in{opacity:1;translate:0 0}
+  /* --- gợi ý bật nhạc --- */
+  #musicHint{position:fixed;right:18px;bottom:78px;z-index:100;background:#fff;color:var(--ink);padding:8px 14px;border-radius:999px;font-size:.85rem;box-shadow:0 6px 20px rgba(59,42,42,.18);opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .4s,transform .4s}
+  #musicHint.show{opacity:1;transform:none}
+  /* --- thanh chọn năm --- */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:34px}
+  .chips a{padding:6px 14px;border-radius:999px;background:var(--rose-soft);color:var(--rose);text-decoration:none;font-size:.88rem;transition:background .2s,color .2s}
+  .chips a:hover{background:var(--rose);color:#fff}
+  /* --- thông tin từng năm --- */
+  .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .loc{display:inline-block;background:var(--gold);color:#fff;border-radius:999px;padding:2px 14px;font-size:.8rem}
+  .note{color:var(--muted);max-width:640px;margin:-4px 0 14px}
+  .letter{max-width:640px;margin-bottom:22px;background:rgba(255,255,255,.7);border-radius:12px;padding:10px 16px}
+  .letter summary{cursor:pointer;color:var(--rose);font-weight:500;user-select:none}
+  .letter .content{margin-top:10px;padding-top:10px;border-top:1px dashed #e3c9c9;font-style:italic;white-space:pre-wrap}
+  @keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.18)}}
+  .year::before{animation:beat 2.2s infinite}
+
   #notice{display:none;max-width:700px;margin:0 auto;padding:12px 16px;background:#fff3cd;color:#664d03;border-radius:10px;font-size:.9rem;text-align:center}
 
   /* ===== TIMELINE ===== */
@@ -49,8 +81,11 @@
   .badge{display:inline-block;background:var(--rose);color:#fff;border-radius:999px;padding:2px 14px;font-size:.8rem;letter-spacing:.08em}
   .year h3{font-size:2rem;margin:8px 0 14px}
   .grid{columns:3 240px;column-gap:20px}
-  .ph{break-inside:avoid;margin-bottom:20px;background:var(--card);padding:12px 12px 60px;box-shadow:0 4px 16px rgba(59,42,42,.08);position:relative;border-radius:4px;cursor:zoom-in;transition:transform .25s,box-shadow .25s}
-  .ph:hover,.ph:focus-visible{transform:translateY(-6px);box-shadow:0 12px 30px rgba(59,42,42,.15);outline:none}
+  .ph{break-inside:avoid;margin-bottom:20px;background:var(--card);padding:12px 12px 60px;box-shadow:0 4px 16px rgba(59,42,42,.08);position:relative;border-radius:4px;cursor:zoom-in;
+    transition:transform .25s,box-shadow .25s,rotate .25s,opacity .8s ease calc(var(--d,0)*70ms),translate .8s cubic-bezier(.2,.7,.2,1) calc(var(--d,0)*70ms)}
+  .ph:nth-child(odd){rotate:-2deg}
+  .ph:nth-child(even){rotate:2deg}
+  .ph:hover,.ph:focus-visible{rotate:0deg;transform:translateY(-8px) scale(1.03);box-shadow:0 14px 34px rgba(59,42,42,.18);outline:none;z-index:2}
   .ph img{width:100%;display:block;border-radius:2px}
   .ph .cap{position:absolute;inset:auto 0 0 0;height:60px;display:flex;align-items:center;justify-content:center;padding:0 10px;text-align:center;font-family:'Caveat','Be Vietnam Pro',cursive;font-size:1.4rem;line-height:1.2}
   .placeholder{aspect-ratio:4/5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;text-align:center;background:linear-gradient(135deg,#f6e1e1,#f4ead7);color:var(--muted);font-size:.85rem}
@@ -62,6 +97,12 @@
   .music-btn{position:fixed;bottom:20px;right:20px;z-index:100;width:48px;height:48px;border-radius:50%;background:var(--rose);color:#fff;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(192,98,110,.4)}
   .music-btn.playing{animation:pulse 2s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,98,110,.7)}70%{box-shadow:0 0 0 15px rgba(192,98,110,0)}100%{box-shadow:0 0 0 0 rgba(192,98,110,0)}}
+
+  /* ===== ĐẾM NGƯỢC + CHẠM ĐỂ NỔ TIM ===== */
+  .next{color:var(--muted);font-size:.95rem;margin-top:6px}
+  .next strong{color:var(--rose)}
+  .note{white-space:pre-wrap}
+  #names,.counter{cursor:pointer}
 
   /* ===== LIGHTBOX ===== */
   .lb{position:fixed;inset:0;background:rgba(20,12,12,.93);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
@@ -82,7 +123,7 @@
   .box h2.sec{margin-top:36px}
   .form-group{margin-bottom:15px}
   .form-group label{display:block;font-weight:500;margin-bottom:5px}
-  .form-group input,.form-group select{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-family:inherit;font-size:1rem}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-family:inherit;font-size:1rem}
   .hint{font-size:.82rem;color:#777;margin-top:4px}
   .btn{background:var(--rose);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:1rem;width:100%;font-family:inherit}
   .btn.gold{background:var(--gold)}
@@ -98,29 +139,36 @@
 
   @media (prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
-    .heart,.music-btn.playing{animation:none}
+    .heart,.music-btn.playing,.rise,.year::before,.scroll span{animation:none}
     .ph{transition:none}
+    .io .reveal{opacity:1;translate:none;transition:none}
+    .hero-bg{transition:opacity 2s}
   }
 </style>
 </head>
 <body>
 
 <button id="musicToggle" class="music-btn" aria-label="Phát nhạc">🔇</button>
+<div id="musicHint" aria-hidden="true">Bấm để nghe nhạc ♪</div>
 <audio id="bgMusic" loop preload="none"></audio>
 
 <header class="hero" id="top">
-  <div class="tag">Our Love Story</div>
-  <h1 id="names">Đang tải...</h1>
-  <div class="date" id="wdate"></div>
-  <div class="counter" id="counter"></div>
-  <div class="days" id="days"></div>
-  <a class="scroll" href="#timeline">Xem kỷ niệm ↓</a>
+  <div class="hero-bg" id="hb0"></div>
+  <div class="hero-bg" id="hb1"></div>
+  <div class="tag rise">Our Love Story</div>
+  <h1 id="names" class="rise" style="animation-delay:.15s">Đang tải...</h1>
+  <div class="date rise" id="wdate" style="animation-delay:.3s"></div>
+  <div class="counter rise" id="counter" style="animation-delay:.45s"></div>
+  <div class="days rise" id="days" style="animation-delay:.6s"></div>
+  <div class="next rise" id="next" style="animation-delay:.7s"></div>
+  <a class="scroll rise" href="#timeline" style="animation-delay:.8s">Xem kỷ niệm <span>↓</span></a>
 </header>
 
 <div id="notice" role="status"></div>
 
 <main id="timeline">
   <div class="toolbar"><h2>Hành trình của chúng mình</h2></div>
+  <nav class="chips" id="yearNav" aria-label="Chọn năm"></nav>
   <div id="years"></div>
 </main>
 
@@ -174,6 +222,13 @@
     <div class="form-group"><label>Lời tựa (caption):</label><input type="text" id="img-cap" placeholder="Ghi chú ngắn cho ảnh"></div>
     <button class="btn gold" type="button" id="btnAddPhoto">Thêm ảnh vào dòng thời gian</button>
 
+    <h2 class="sec">Thông tin từng năm</h2>
+    <div class="form-group"><label>Năm:</label><input type="number" id="yi-year" value="2026"></div>
+    <div class="form-group"><label>Địa điểm:</label><input type="text" id="yi-loc" placeholder="Ví dụ: Đà Lạt"></div>
+    <div class="form-group"><label>Lời kể ngắn:</label><input type="text" id="yi-note" placeholder="Một câu về năm này"></div>
+    <div class="form-group"><label>Thư tình (hiện trong hộp thư nhỏ):</label><textarea id="yi-letter" rows="4" placeholder="Gửi vợ yêu..."></textarea></div>
+    <button class="btn gold" type="button" id="btnSaveYear">Lưu thông tin năm</button>
+
     <h2 class="sec">Ảnh đã thêm</h2>
     <div class="plist" id="photo-list"></div>
 
@@ -216,7 +271,9 @@ function normalize(d) {
   const c = Object.assign({}, DEFAULTS, d || {});
   if (!Array.isArray(c.names) || c.names.length < 2) c.names = DEFAULTS.names.slice();
   if (!Array.isArray(c.anniversaries)) c.anniversaries = [];
-  c.anniversaries = c.anniversaries.map(a => ({ year: Number(a.year), photos: Array.isArray(a.photos) ? a.photos : [] }));
+  c.anniversaries = c.anniversaries
+    .map(a => ({ year: Number(a.year), photos: Array.isArray(a.photos) ? a.photos : [], note: a.note || "", location: a.location || "", letter: a.letter || "" }))
+    .filter(a => Number.isInteger(a.year) && a.year >= 1900 && a.year <= 2200);
   c.musicUrl = c.musicUrl || DEFAULTS.musicUrl;
   c.weddingDate = c.weddingDate || DEFAULTS.weddingDate;
   return c;
@@ -243,21 +300,28 @@ function renderWebsite() {
 
   setMusic(CONFIG.musicUrl);
 
-  const list = CONFIG.anniversaries.slice().sort((a, b) => b.year - a.year);
+  const list = CONFIG.anniversaries.filter(a => a.photos.length || a.note || a.letter).sort((a, b) => b.year - a.year);
   flat = [];
   const html = list.map(a => {
     const nth = a.year - wd.getFullYear();
     const title = nth > 0 ? "Kỷ niệm " + nth + " năm ngày cưới" : "Năm " + a.year;
-    const photos = a.photos.map(p => {
+    const photos = a.photos.map((p, pi) => {
       const idx = flat.push({ src: safeUrl(p.src), cap: p.caption || "", year: a.year }) - 1;
-      return '<figure class="ph" tabindex="0" data-i="' + idx + '">' +
+      return '<figure class="ph reveal" tabindex="0" data-i="' + idx + '" style="--d:' + (pi % 6) + '">' +
         '<img src="' + esc(safeUrl(p.src)) + '" alt="' + esc(p.caption || "Ảnh kỷ niệm") + '" loading="lazy" decoding="async">' +
         (p.caption ? '<figcaption class="cap">' + esc(p.caption) + '</figcaption>' : "") + '</figure>';
     }).join("");
-    return '<section class="year" id="y' + a.year + '"><span class="badge">' + a.year + '</span><h3>' + esc(title) + '</h3>' +
+    return '<section class="year reveal" id="y' + a.year + '"><div class="meta"><span class="badge">' + a.year + '</span>' +
+      (a.location ? '<span class="loc">📍 ' + esc(a.location) + '</span>' : "") + '</div>' +
+      '<h3>' + esc(title) + '</h3>' +
+      (a.note ? '<p class="note">' + esc(a.note) + '</p>' : "") +
+      (a.letter ? '<details class="letter"><summary>💌 Đọc thư tình</summary><div class="content">' + esc(a.letter) + '</div></details>' : "") +
       (photos ? '<div class="grid">' + photos + '</div>' : '<div class="empty">📷 Chưa có ảnh năm này.</div>') + '</section>';
   }).join("");
   $("#years").innerHTML = html || '<div class="empty">📷 Chưa có ảnh nào. Hãy thêm kỷ niệm đầu tiên nhé!</div>';
+  $("#yearNav").innerHTML = list.map(a => '<a href="#y' + a.year + '">' + a.year + "</a>").join("");
+  observeReveal();
+  buildHeroBg();
 
   document.querySelectorAll(".ph img").forEach(img => {
     img.addEventListener("error", () => {
@@ -274,6 +338,64 @@ function renderWebsite() {
   updateAdminLists();
 }
 
+/* ----- 2b. Hiệu ứng: cuộn, nền ảnh, tim bay ----- */
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let io;
+function observeReveal() {
+  const els = document.querySelectorAll(".reveal:not(.in)");
+  if (!("IntersectionObserver" in window)) return;
+  document.documentElement.classList.add("io");
+  if (!io) io = new IntersectionObserver(es => es.forEach(en => {
+    if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+  }), { threshold: 0.08 });
+  els.forEach(e => io.observe(e));
+}
+
+let heroTimer, heroSig = "";
+function buildHeroBg() {
+  const srcs = flat.map(p => p.src).filter(Boolean).slice(0, 12);
+  const sig = srcs.join("|");
+  if (sig === heroSig) return;
+  heroSig = sig; clearInterval(heroTimer);
+  const layers = [$("#hb0"), $("#hb1")];
+  layers.forEach(l => l.classList.remove("on"));
+  if (!srcs.length) return;
+  let i = 0, top = 0;
+  const swap = () => {
+    const src = srcs[i % srcs.length]; i++;
+    const im = new Image();
+    im.onload = () => {
+      const nxt = layers[top], prev = layers[1 - top];
+      nxt.style.backgroundImage = "url(" + JSON.stringify(src) + ")";
+      nxt.classList.remove("on"); void nxt.offsetWidth;
+      nxt.classList.add("on"); prev.classList.remove("on");
+      top = 1 - top;
+    };
+    im.src = src;
+  };
+  swap();
+  if (srcs.length > 1 && !reduced) heroTimer = setInterval(swap, 6000);
+}
+
+function burst(x, y, n) {
+  if (reduced) return;
+  const icons = ["♥", "💗", "✨", "🌸"];
+  for (let i = 0; i < (n || 14); i++) {
+    const s = document.createElement("span");
+    s.className = "pop"; s.textContent = icons[i % icons.length];
+    const a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 110;
+    s.style.left = x + "px"; s.style.top = y + "px";
+    s.style.fontSize = (16 + Math.random() * 14) + "px";
+    s.style.setProperty("--dx", Math.cos(a) * d + "px");
+    s.style.setProperty("--dy", (Math.sin(a) * d - 40) + "px");
+    document.body.appendChild(s);
+    s.addEventListener("animationend", () => s.remove());
+  }
+}
+$("#names").addEventListener("click", e => burst(e.clientX, e.clientY, 16));
+$("#counter").addEventListener("click", e => burst(e.clientX, e.clientY, 16));
+
 /* ----- 3. Đồng hồ ----- */
 function tick() {
   if (isNaN(wd)) return;
@@ -285,7 +407,23 @@ function tick() {
   $("#counter").innerHTML = box(y, "năm") + box(m, "tháng") + box(d, "ngày");
   const days = Math.floor((now - wd) / 864e5);
   $("#days").innerHTML = days >= 0 ? "Đã bên nhau <strong>" + days.toLocaleString("vi-VN") + "</strong> ngày" : "";
+
+  const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const nx = new Date(now.getFullYear(), wd.getMonth(), wd.getDate());
+  if (nx < t0) nx.setFullYear(nx.getFullYear() + 1);
+  const left = Math.round((nx - t0) / 864e5), nth = nx.getFullYear() - wd.getFullYear();
+  if (nth < 1) { $("#next").innerHTML = ""; return; }
+  if (left === 0) {
+    $("#next").innerHTML = "🎉 <strong>Hôm nay</strong> là kỷ niệm " + nth + " năm ngày cưới!";
+    if (!celebrated) {
+      celebrated = true;
+      for (let k = 0; k < 5; k++) setTimeout(() => burst(innerWidth * (0.15 + 0.175 * k), innerHeight * 0.4, 22), 600 + k * 350);
+    }
+  } else {
+    $("#next").innerHTML = "Còn <strong>" + left + "</strong> ngày nữa là kỷ niệm " + nth + " năm ngày cưới";
+  }
 }
+let celebrated = false;
 setInterval(tick, 1000);
 
 /* ----- 4. Nhạc nền ----- */
@@ -309,6 +447,13 @@ musicBtn.onclick = async () => {
   if (bgMusic.paused) { try { await bgMusic.play(); } catch (e) { showNotice("Không phát được nhạc. Hãy kiểm tra tên file hoặc link nhạc."); } }
   else bgMusic.pause();
 };
+
+/* gợi ý bật nhạc (trình duyệt không cho tự phát) */
+const musicHint = $("#musicHint");
+const hideHint = () => musicHint.classList.remove("show");
+bgMusic.addEventListener("play", hideHint);
+musicBtn.addEventListener("click", hideHint);
+setTimeout(() => { if (bgMusic.paused) { musicHint.classList.add("show"); setTimeout(hideHint, 7000); } }, 2500);
 
 /* ----- 5. Tim bay ----- */
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -359,7 +504,7 @@ $("#years").addEventListener("keydown", e => {
 let taps = 0, tapTimer;
 $("#secret").addEventListener("click", () => {
   taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { taps = 0; }, 3000);
-  if (taps >= 3) { taps = 0; auth.currentUser ? showPanel() : ($("#login").style.display = "block"); }
+  if (taps >= 5) { taps = 0; auth.currentUser ? showPanel() : ($("#login").style.display = "block"); }
 });
 $("#login-close").onclick = () => { $("#login").style.display = "none"; };
 $("#admin-close").onclick = () => { $("#admin-panel").style.display = "none"; };
@@ -386,6 +531,7 @@ function showPanel() {
   $("#cfg-date").value = CONFIG.weddingDate || "";
   $("#cfg-music").value = CONFIG.musicUrl || "";
   $("#adminMsg").style.display = "none";
+  fillYearInfo();
   $("#admin-panel").style.display = "block";
   updateAdminLists();
 }
@@ -410,7 +556,7 @@ async function addPhoto() {
   const year = parseInt($("#img-year").value, 10);
   const caption = $("#img-cap").value.trim();
   let url = $("#img-url").value.trim();
-  if (isNaN(year)) return adminMsg("Năm không hợp lệ.", false);
+  if (isNaN(year) || year < 1900) return adminMsg("Năm không hợp lệ.", false);
   if (!url) return adminMsg("Vui lòng dán link ảnh.", false);
   if (/drive\.google\.com|docs\.google\.com/.test(url)) {
     const m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
@@ -428,6 +574,27 @@ async function addPhoto() {
   } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
 }
 
+function fillYearInfo() {
+  const y = CONFIG.anniversaries.find(a => a.year === parseInt($("#yi-year").value, 10));
+  $("#yi-loc").value = y ? y.location : "";
+  $("#yi-note").value = y ? y.note : "";
+  $("#yi-letter").value = y ? y.letter : "";
+}
+async function saveYearInfo() {
+  const year = parseInt($("#yi-year").value, 10);
+  if (isNaN(year) || year < 1900) return adminMsg("Năm không hợp lệ.", false);
+  try {
+    const list = cloneYears();
+    let y = list.find(a => a.year === year);
+    if (!y) { y = { year: year, photos: [] }; list.push(y); }
+    y.location = $("#yi-loc").value.trim();
+    y.note = $("#yi-note").value.trim();
+    y.letter = $("#yi-letter").value.trim();
+    await saveAll({ anniversaries: list });
+    adminMsg("Đã lưu thông tin năm " + year + ".", true);
+  } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
+}
+
 async function deletePhoto(year, idx) {
   if (!confirm("Xóa ảnh này?")) return;
   try {
@@ -435,7 +602,7 @@ async function deletePhoto(year, idx) {
     const y = list.find(a => a.year === year);
     if (!y) return;
     y.photos.splice(idx, 1);
-    await saveAll({ anniversaries: list.filter(a => a.photos.length > 0) });
+    await saveAll({ anniversaries: list.filter(a => a.photos.length > 0 || a.note || a.letter || a.location) });
     adminMsg("Đã xóa ảnh.", true);
   } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
 }
@@ -466,6 +633,8 @@ $("#photo-list").addEventListener("click", e => {
 });
 $("#btnSaveConfig").onclick = saveConfig;
 $("#btnAddPhoto").onclick = addPhoto;
+$("#btnSaveYear").onclick = saveYearInfo;
+$("#yi-year").addEventListener("input", fillYearInfo);
 $("#btnDeleteYear").onclick = deleteYearData;
 </script>
 </body>
