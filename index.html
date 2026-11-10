@@ -4,11 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kỷ niệm ngày cưới</title>
+<meta name="description" content="Hành trình kỷ niệm ngày cưới của chúng mình - mỗi năm một câu chuyện, mỗi năm thêm những bức ảnh mới.">
+<meta name="theme-color" content="#c0626e">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Kỷ niệm ngày cưới">
+<meta property="og:description" content="Hành trình kỷ niệm ngày cưới của chúng mình.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Be+Vietnam+Pro:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- Tích hợp Firebase App và Firestore -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
   :root{ --bg:#fbf6f1; --ink:#3b2a2a; --muted:#8a7470; --rose:#c0626e; --rose-soft:#f3dcdc; --gold:#b8935a; --card:#ffffff; }
@@ -16,101 +21,173 @@
   html{scroll-behavior:smooth}
   body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
   h1,h2,h3{font-family:'Playfair Display',serif;font-weight:500}
-  
-  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 20px;position:relative;overflow:hidden; z-index: 1;}
+
+  /* ===== HERO ===== */
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 20px;position:relative;overflow:hidden;z-index:1}
   .hero .tag{letter-spacing:.35em;text-transform:uppercase;font-size:.75rem;color:var(--gold)}
   .hero h1{font-size:clamp(2.6rem,9vw,5.5rem);margin:14px 0 6px;color:var(--ink)}
   .hero h1 span{color:var(--rose);font-style:italic;font-weight:500}
   .hero .date{color:var(--muted);font-size:1.05rem}
-  .counter{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:36px 0 18px}
+  .counter{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:36px 0 14px}
   .counter div{background:var(--card);border-radius:16px;padding:16px 18px;min-width:84px;box-shadow:0 6px 24px rgba(192,98,110,.12)}
   .counter b{display:block;font-family:'Playfair Display',serif;font-size:2rem;color:var(--rose);font-weight:700}
   .counter small{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.1em}
-  .heart{position:absolute;color:var(--rose);opacity:.18;animation:float linear infinite;user-select:none; z-index: -1;}
+  .days{color:var(--muted);font-size:.95rem}
+  .days strong{color:var(--rose)}
+  .scroll{margin-top:36px;color:var(--gold);text-decoration:none;font-size:.85rem;letter-spacing:.2em;text-transform:uppercase}
+  .heart{position:absolute;color:var(--rose);opacity:.18;animation:float linear infinite;user-select:none;z-index:-1}
   @keyframes float{from{transform:translateY(105vh)}to{transform:translateY(-15vh)}}
 
+  #notice{display:none;max-width:700px;margin:0 auto;padding:12px 16px;background:#fff3cd;color:#664d03;border-radius:10px;font-size:.9rem;text-align:center}
+
+  /* ===== TIMELINE ===== */
   main{max-width:1100px;margin:0 auto;padding:40px 18px 80px}
-  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:30px}
   .toolbar h2{font-size:1.8rem}
   .year{position:relative;padding-left:34px;margin-bottom:64px;border-left:2px dashed #e3c9c9}
   .year::before{content:"♥";position:absolute;left:-12px;top:0;width:22px;height:22px;border-radius:50%;background:var(--bg);color:var(--rose);font-size:18px;line-height:22px;text-align:center}
   .badge{display:inline-block;background:var(--rose);color:#fff;border-radius:999px;padding:2px 14px;font-size:.8rem;letter-spacing:.08em}
-  .year h3{font-size:2rem;margin:8px 0 4px}
+  .year h3{font-size:2rem;margin:8px 0 14px}
   .grid{columns:3 240px;column-gap:20px}
-  .ph{break-inside:avoid; margin-bottom:20px; background:var(--card); padding: 12px 12px 60px 12px; box-shadow:0 4px 16px rgba(59,42,42,.08); position:relative;}
-  .ph img{width:100%;display:block;}
-  .ph .cap{position:absolute; inset:auto 0 0 0; height: 60px; display: flex; align-items: center; justify-content: center; font-family: 'Caveat', cursive; font-size: 1.4rem;}
-  footer{text-align:center;color:var(--muted);padding:30px 0 50px;font-size:.9rem; cursor:pointer;}
-  .music-btn {position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: var(--rose); color: white; border: none; font-size: 1.2rem; cursor:pointer;}
+  .ph{break-inside:avoid;margin-bottom:20px;background:var(--card);padding:12px 12px 60px;box-shadow:0 4px 16px rgba(59,42,42,.08);position:relative;border-radius:4px;cursor:zoom-in;transition:transform .25s,box-shadow .25s}
+  .ph:hover,.ph:focus-visible{transform:translateY(-6px);box-shadow:0 12px 30px rgba(59,42,42,.15);outline:none}
+  .ph img{width:100%;display:block;border-radius:2px}
+  .ph .cap{position:absolute;inset:auto 0 0 0;height:60px;display:flex;align-items:center;justify-content:center;padding:0 10px;text-align:center;font-family:'Caveat','Be Vietnam Pro',cursive;font-size:1.4rem;line-height:1.2}
+  .placeholder{aspect-ratio:4/5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;text-align:center;background:linear-gradient(135deg,#f6e1e1,#f4ead7);color:var(--muted);font-size:.85rem}
+  .placeholder span{font-size:2rem}
+  .empty{padding:30px;border:2px dashed #e3c9c9;border-radius:14px;color:var(--muted);text-align:center}
+  footer{text-align:center;color:var(--muted);padding:30px 0 50px;font-size:.9rem}
+  #secret{cursor:default;padding:6px;user-select:none}
 
-  /* ===== CSS ADMIN PANEL ===== */
-  #admin-panel {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
-    overflow-y: auto; padding: 20px; color: #333;
+  .music-btn{position:fixed;bottom:20px;right:20px;z-index:100;width:48px;height:48px;border-radius:50%;background:var(--rose);color:#fff;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(192,98,110,.4)}
+  .music-btn.playing{animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,98,110,.7)}70%{box-shadow:0 0 0 15px rgba(192,98,110,0)}100%{box-shadow:0 0 0 0 rgba(192,98,110,0)}}
+
+  /* ===== LIGHTBOX ===== */
+  .lb{position:fixed;inset:0;background:rgba(20,12,12,.93);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
+  .lb.open{display:flex}
+  .lbf{background:#fff;padding:10px 10px 14px;border-radius:4px;box-shadow:0 10px 50px rgba(0,0,0,.5);max-width:94vw;text-align:center}
+  .lbf img{max-width:calc(94vw - 20px);max-height:74vh;display:block;margin:0 auto}
+  .lbf figcaption{color:#222;font-family:'Caveat','Be Vietnam Pro',cursive;font-size:1.5rem;line-height:1.3;padding-top:8px;min-height:1.6em}
+  .lb button{position:absolute;background:rgba(255,255,255,.14);border:0;color:#fff;font-size:1.6rem;width:46px;height:46px;border-radius:50%;cursor:pointer}
+  .lb button:hover{background:rgba(255,255,255,.28)}
+  .lb .x{top:18px;right:18px}
+  .lb .p{left:12px;top:50%;transform:translateY(-50%)}
+  .lb .n{right:12px;top:50%;transform:translateY(-50%)}
+
+  /* ===== ĐĂNG NHẬP + ADMIN ===== */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;overflow-y:auto;padding:20px;color:#333}
+  .box{background:#fff;max-width:600px;margin:40px auto;padding:30px;border-radius:12px;position:relative}
+  .box h2{border-bottom:2px solid var(--rose);padding-bottom:10px;margin-bottom:20px}
+  .box h2.sec{margin-top:36px}
+  .form-group{margin-bottom:15px}
+  .form-group label{display:block;font-weight:500;margin-bottom:5px}
+  .form-group input,.form-group select{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-family:inherit;font-size:1rem}
+  .hint{font-size:.82rem;color:#777;margin-top:4px}
+  .btn{background:var(--rose);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:1rem;width:100%;font-family:inherit}
+  .btn.gold{background:var(--gold)}
+  .btn.red{background:#c0392b}
+  .btn.ghost{background:#eee;color:#333}
+  .btn-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.5rem;cursor:pointer}
+  #login-err,#adminMsg{margin-top:10px;font-weight:500;display:none}
+  .plist .yr{font-weight:600;margin:14px 0 6px}
+  .plist .row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eee}
+  .plist img{width:44px;height:44px;object-fit:cover;border-radius:4px;background:#eee}
+  .plist .t{flex:1;font-size:.9rem;word-break:break-word}
+  .plist button{border:none;background:none;cursor:pointer;font-size:1.2rem}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .heart,.music-btn.playing{animation:none}
+    .ph{transition:none}
   }
-  .admin-box { background: #fff; max-width: 600px; margin: 40px auto; padding: 30px; border-radius: 12px; }
-  .admin-box h2 { border-bottom: 2px solid var(--rose); padding-bottom: 10px; margin-bottom: 20px; }
-  .form-group { margin-bottom: 15px; }
-  .form-group label { display: block; font-weight: 500; margin-bottom: 5px; }
-  .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit;}
-  .btn-save { background: var(--rose); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; width: 100%;}
-  .btn-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
-  #uploadStatus { color: green; font-weight: bold; margin-top: 10px; display: none;}
 </style>
 </head>
 <body>
 
-<button id="musicToggle" class="music-btn">🔇</button>
-<audio id="bgMusic" loop></audio>
+<button id="musicToggle" class="music-btn" aria-label="Phát nhạc">🔇</button>
+<audio id="bgMusic" loop preload="none"></audio>
 
 <header class="hero" id="top">
   <div class="tag">Our Love Story</div>
-  <h1 id="names">Đang tải dữ liệu...</h1>
+  <h1 id="names">Đang tải...</h1>
   <div class="date" id="wdate"></div>
   <div class="counter" id="counter"></div>
+  <div class="days" id="days"></div>
+  <a class="scroll" href="#timeline">Xem kỷ niệm ↓</a>
 </header>
+
+<div id="notice" role="status"></div>
 
 <main id="timeline">
   <div class="toolbar"><h2>Hành trình của chúng mình</h2></div>
   <div id="years"></div>
 </main>
 
-<footer id="foot">Made with ♥ — Chạm 5 lần vào đây để sửa</footer> 
+<footer>Made with <span id="secret">♥</span> <span id="foot-names"></span></footer>
 
-<!-- ===== BẢNG ĐIỀU KHIỂN BÍ MẬT ===== -->
-<div id="admin-panel">
-  <div class="admin-box">
-    <button class="btn-close" onclick="closeAdmin()">✕</button>
-    
-    <h2>Cài đặt Chung</h2>
+<!-- ===== LIGHTBOX ===== -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Xem ảnh">
+  <button class="x" aria-label="Đóng">✕</button>
+  <button class="p" aria-label="Ảnh trước">‹</button>
+  <button class="n" aria-label="Ảnh sau">›</button>
+  <figure class="lbf"><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+</div>
+
+<!-- ===== ĐĂNG NHẬP ===== -->
+<div class="overlay" id="login">
+  <div class="box" style="max-width:420px">
+    <button class="btn-close" type="button" id="login-close" aria-label="Đóng">✕</button>
+    <h2>Đăng nhập quản trị</h2>
+    <form id="login-form">
+      <div class="form-group"><label for="login-email">Email</label><input type="email" id="login-email" autocomplete="username" required></div>
+      <div class="form-group"><label for="login-pass">Mật khẩu</label><input type="password" id="login-pass" autocomplete="current-password" required></div>
+      <button class="btn" type="submit">Đăng nhập</button>
+      <div id="login-err" style="color:#c0392b"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== BẢNG QUẢN TRỊ ===== -->
+<div class="overlay" id="admin-panel">
+  <div class="box">
+    <button class="btn-close" type="button" id="admin-close" aria-label="Đóng">✕</button>
+
+    <h2>Cài đặt chung</h2>
     <div class="form-group"><label>Tên chồng:</label><input type="text" id="cfg-name1"></div>
     <div class="form-group"><label>Tên vợ:</label><input type="text" id="cfg-name2"></div>
-    <div class="form-group"><label>Ngày cưới (YYYY-MM-DD):</label><input type="date" id="cfg-date"></div>
-    <div class="form-group"><label>Link nhạc (MP3):</label><input type="text" id="cfg-music"></div>
-    <button class="btn-save" onclick="saveConfig()">Lưu Cài đặt Chung</button>
-
-    <h2 style="margin-top: 40px;">Thêm ảnh mới từ Link Google Drive</h2>
-    <div class="form-group"><label>Năm kỷ niệm (vd: 2025):</label><input type="number" id="img-year" value="2025"></div>
-    <div class="form-group"><label>Link ảnh (Từ Google Drive):</label><input type="text" id="img-url" placeholder="Dán link chia sẻ ảnh vào đây"></div>
-    <div class="form-group"><label>Lời tựa (Caption):</label><input type="text" id="img-cap" placeholder="Nhập ghi chú cho ảnh"></div>
-    <button class="btn-save" onclick="addPhoto()" style="background: var(--gold);">Thêm ảnh vào dòng thời gian</button>
-    <div id="uploadStatus">Đang lưu dữ liệu...</div>
-
-    <div id="delete-section">
-      <h2 style="margin-top: 40px; color: red;">Xóa dữ liệu</h2>
-      <div class="form-group">
-          <label>Chọn năm muốn xóa toàn bộ ảnh:</label>
-          <select id="delete-year-select"></select>
-      </div>
-      <button class="btn-save" onclick="deleteYearData()" style="background: red;">Xóa Năm Này</button>
+    <div class="form-group"><label>Ngày cưới:</label><input type="date" id="cfg-date"></div>
+    <div class="form-group">
+      <label>Nhạc nền (tên file hoặc link MP3):</label>
+      <input type="text" id="cfg-music" placeholder="NoiNayCoAnh.mp3">
+      <div class="hint">Tên file phải nằm cùng thư mục với index.html trên GitHub.</div>
     </div>
+    <button class="btn" type="button" id="btnSaveConfig">Lưu cài đặt chung</button>
+
+    <h2 class="sec">Thêm ảnh mới</h2>
+    <div class="form-group"><label>Năm kỷ niệm:</label><input type="number" id="img-year" value="2026"></div>
+    <div class="form-group">
+      <label>Link ảnh:</label>
+      <input type="text" id="img-url" placeholder="Dán link chia sẻ Google Drive hoặc link ảnh trực tiếp">
+      <div class="hint">Ảnh trên Drive cần chia sẻ ở chế độ "Bất kỳ ai có đường liên kết".</div>
+    </div>
+    <div class="form-group"><label>Lời tựa (caption):</label><input type="text" id="img-cap" placeholder="Ghi chú ngắn cho ảnh"></div>
+    <button class="btn gold" type="button" id="btnAddPhoto">Thêm ảnh vào dòng thời gian</button>
+
+    <h2 class="sec">Ảnh đã thêm</h2>
+    <div class="plist" id="photo-list"></div>
+
+    <h2 class="sec" style="color:#c0392b">Xóa cả một năm</h2>
+    <div class="form-group"><label>Chọn năm muốn xóa toàn bộ ảnh:</label><select id="delete-year-select"></select></div>
+    <button class="btn red" type="button" id="btnDeleteYear">Xóa năm này</button>
+
+    <div id="adminMsg"></div>
+    <button class="btn ghost" type="button" id="btnLogout" style="margin-top:30px">Đăng xuất</button>
   </div>
 </div>
 
 <script>
-/* =====================================================================
-   🔥 DÁN FIREBASE CONFIG CỦA BẠN VÀO ĐÂY 🔥
-   ===================================================================== */
+/* ============ FIREBASE CONFIG (đã điền sẵn) ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyCvwjG6G4OwiWxsS54Xj3FsQ8giuVdtBPU",
   authDomain: "ky-niem-ngay-cuoi.firebaseapp.com",
@@ -123,169 +200,273 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
-let CONFIG = { names: ["Chồng", "Vợ"], weddingDate: "2024-11-20", musicUrl: "", anniversaries: [] };
-let wd = new Date();
-
-// 1. Lắng nghe dữ liệu
-db.collection("settings").doc("main").onSnapshot((doc) => {
-  if (doc.exists) {
-    CONFIG = doc.data(); 
-    renderWebsite();     
-  } else {
-    db.collection("settings").doc("main").set(CONFIG);
-  }
-});
+const auth = firebase.auth();
+const DOC = db.collection("settings").doc("main");
 
 const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl = u => /^(https?:\/\/|[\w][\w .\/-]*$)/i.test(u || "") ? u : "";
+
+const DEFAULTS = { names: ["Chồng", "Vợ"], weddingDate: "2024-11-20", musicUrl: "NoiNayCoAnh.mp3", anniversaries: [] };
+let CONFIG = JSON.parse(JSON.stringify(DEFAULTS));
+let wd = new Date(DEFAULTS.weddingDate + "T00:00:00");
+let flat = [], cur = 0;
+
+function normalize(d) {
+  const c = Object.assign({}, DEFAULTS, d || {});
+  if (!Array.isArray(c.names) || c.names.length < 2) c.names = DEFAULTS.names.slice();
+  if (!Array.isArray(c.anniversaries)) c.anniversaries = [];
+  c.anniversaries = c.anniversaries.map(a => ({ year: Number(a.year), photos: Array.isArray(a.photos) ? a.photos : [] }));
+  c.musicUrl = c.musicUrl || DEFAULTS.musicUrl;
+  c.weddingDate = c.weddingDate || DEFAULTS.weddingDate;
+  return c;
+}
+
+/* ----- Thông báo lỗi ----- */
+function showNotice(msg) { const n = $("#notice"); n.textContent = msg; n.style.display = "block"; }
+function hideNotice() { $("#notice").style.display = "none"; }
+
+/* ----- 1. Lắng nghe dữ liệu từ Firestore ----- */
+DOC.onSnapshot(
+  doc => { CONFIG = normalize(doc.exists ? doc.data() : null); hideNotice(); renderWebsite(); },
+  err => { CONFIG = normalize(null); showNotice("Không tải được dữ liệu (" + (err.code || err.message) + "). Đang hiển thị nội dung mặc định."); renderWebsite(); }
+);
+
+/* ----- 2. Vẽ trang ----- */
 function renderWebsite() {
   wd = new Date(CONFIG.weddingDate + "T00:00:00");
-  $("#names").innerHTML = `${CONFIG.names[0]} <span>&</span> ${CONFIG.names[1]}`;
-  const fmt = d => d.toLocaleDateString("vi-VN",{day:"numeric",month:"long",year:"numeric"});
-  $("#wdate").textContent = "Ngày cưới: " + fmt(wd);
-  
-  const bgMusic = $("#bgMusic");
-  if(bgMusic.src !== CONFIG.musicUrl) bgMusic.src = CONFIG.musicUrl;
+  const n1 = esc(CONFIG.names[0]), n2 = esc(CONFIG.names[1]);
+  $("#names").innerHTML = n1 + " <span>&amp;</span> " + n2;
+  $("#foot-names").textContent = "- " + CONFIG.names[0] + " & " + CONFIG.names[1];
+  document.title = CONFIG.names[0] + " & " + CONFIG.names[1] + " - Kỷ niệm ngày cưới";
+  $("#wdate").textContent = isNaN(wd) ? "" : "Ngày cưới: " + wd.toLocaleDateString("vi-VN", { day: "numeric", month: "long", year: "numeric" });
 
-  const list = [...(CONFIG.anniversaries || [])].sort((a,b) => b.year - a.year);
-  $("#years").innerHTML = list.map(a => {
-    const photos = (a.photos||[]).map(p => `
-      <figure class="ph">
-        <img src="${p.src}" loading="lazy">
-        ${p.caption ? `<figcaption class="cap">${p.caption}</figcaption>` : ""}
-      </figure>`).join("");
-    return `<section class="year">
-      <span class="badge">${a.year}</span>
-      <h3>Kỷ niệm năm ${a.year}</h3>
-      <div class="grid">${photos}</div>
-    </section>`;
+  setMusic(CONFIG.musicUrl);
+
+  const list = CONFIG.anniversaries.slice().sort((a, b) => b.year - a.year);
+  flat = [];
+  const html = list.map(a => {
+    const nth = a.year - wd.getFullYear();
+    const title = nth > 0 ? "Kỷ niệm " + nth + " năm ngày cưới" : "Năm " + a.year;
+    const photos = a.photos.map(p => {
+      const idx = flat.push({ src: safeUrl(p.src), cap: p.caption || "", year: a.year }) - 1;
+      return '<figure class="ph" tabindex="0" data-i="' + idx + '">' +
+        '<img src="' + esc(safeUrl(p.src)) + '" alt="' + esc(p.caption || "Ảnh kỷ niệm") + '" loading="lazy" decoding="async">' +
+        (p.caption ? '<figcaption class="cap">' + esc(p.caption) + '</figcaption>' : "") + '</figure>';
+    }).join("");
+    return '<section class="year" id="y' + a.year + '"><span class="badge">' + a.year + '</span><h3>' + esc(title) + '</h3>' +
+      (photos ? '<div class="grid">' + photos + '</div>' : '<div class="empty">📷 Chưa có ảnh năm này.</div>') + '</section>';
   }).join("");
+  $("#years").innerHTML = html || '<div class="empty">📷 Chưa có ảnh nào. Hãy thêm kỷ niệm đầu tiên nhé!</div>';
 
-  updateDeleteList();
+  document.querySelectorAll(".ph img").forEach(img => {
+    img.addEventListener("error", () => {
+      const fig = img.closest(".ph");
+      const ph = document.createElement("div");
+      ph.className = "placeholder";
+      ph.innerHTML = "<span>🖼️</span>Không tải được ảnh";
+      img.replaceWith(ph);
+      fig.dataset.broken = "1";
+    }, { once: true });
+  });
+
+  tick();
+  updateAdminLists();
 }
 
-// 2. Đồng hồ
-function tick(){
-  const now=new Date();
-  let y=now.getFullYear()-wd.getFullYear(); let m=now.getMonth()-wd.getMonth(); let d=now.getDate()-wd.getDate();
-  if(d<0){m--; d+=new Date(now.getFullYear(),now.getMonth(),0).getDate();}
-  if(m<0){y--; m+=12;}
-  const box=(n,l)=>`<div><b>${n}</b><small>${l}</small></div>`;
-  $("#counter").innerHTML = box(y,"năm")+box(m,"tháng")+box(d,"ngày");
+/* ----- 3. Đồng hồ ----- */
+function tick() {
+  if (isNaN(wd)) return;
+  const now = new Date();
+  let y = now.getFullYear() - wd.getFullYear(), m = now.getMonth() - wd.getMonth(), d = now.getDate() - wd.getDate();
+  if (d < 0) { m--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  if (m < 0) { y--; m += 12; }
+  const box = (n, l) => "<div><b>" + n + "</b><small>" + l + "</small></div>";
+  $("#counter").innerHTML = box(y, "năm") + box(m, "tháng") + box(d, "ngày");
+  const days = Math.floor((now - wd) / 864e5);
+  $("#days").innerHTML = days >= 0 ? "Đã bên nhau <strong>" + days.toLocaleString("vi-VN") + "</strong> ngày" : "";
 }
-setInterval(tick,1000);
+setInterval(tick, 1000);
 
-// 3. Nhạc nền
-let isPlaying = false;
-$("#musicToggle").onclick = () => {
-  if (isPlaying) { $("#bgMusic").pause(); $("#musicToggle").textContent = "🔇"; } 
-  else { $("#bgMusic").play(); $("#musicToggle").textContent = "🎵"; }
-  isPlaying = !isPlaying;
+/* ----- 4. Nhạc nền ----- */
+const bgMusic = $("#bgMusic"), musicBtn = $("#musicToggle");
+function setMusic(url) {
+  if (!url || bgMusic.getAttribute("src") === url) return;
+  const wasPlaying = !bgMusic.paused;
+  bgMusic.setAttribute("src", url);
+  if (wasPlaying) bgMusic.play().catch(() => {});
+}
+function syncMusicBtn() {
+  const p = !bgMusic.paused;
+  musicBtn.textContent = p ? "🎵" : "🔇";
+  musicBtn.classList.toggle("playing", p);
+  musicBtn.setAttribute("aria-label", p ? "Tắt nhạc" : "Phát nhạc");
+}
+bgMusic.addEventListener("play", syncMusicBtn);
+bgMusic.addEventListener("pause", syncMusicBtn);
+bgMusic.addEventListener("error", () => showNotice("Không phát được nhạc. Hãy kiểm tra tên file hoặc link nhạc trong phần quản trị."));
+musicBtn.onclick = async () => {
+  if (bgMusic.paused) { try { await bgMusic.play(); } catch (e) { showNotice("Không phát được nhạc. Hãy kiểm tra tên file hoặc link nhạc."); } }
+  else bgMusic.pause();
 };
 
-// 4. Mở Admin (Click 5 lần)
-let clicks = 0;
-$("#foot").addEventListener("click", () => {
-  clicks++;
-  if(clicks >= 2) {
-    clicks = 0;
-    const pwd = prompt("Nhập mật khẩu để mở khóa:");
-    if(pwd === "Viet@nh17072001") { 
-      $("#admin-panel").style.display = "block";
-      $("#cfg-name1").value = CONFIG.names[0] || "";
-      $("#cfg-name2").value = CONFIG.names[1] || "";
-      $("#cfg-date").value = CONFIG.weddingDate || "";
-      $("#cfg-music").value = CONFIG.musicUrl || "";
-    } else {
-      alert("Sai mật khẩu!");
-    }
+/* ----- 5. Tim bay ----- */
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  for (let i = 0; i < 14; i++) {
+    const h = document.createElement("div");
+    h.className = "heart"; h.textContent = "♥";
+    h.style.left = Math.random() * 100 + "%";
+    h.style.fontSize = (14 + Math.random() * 30) + "px";
+    h.style.animationDuration = (12 + Math.random() * 16) + "s";
+    h.style.animationDelay = (-Math.random() * 20) + "s";
+    $("#top").appendChild(h);
+  }
+}
+
+/* ----- 6. Lightbox ----- */
+const lb = $("#lb");
+function showLb() { const p = flat[cur]; $("#lbImg").src = p.src; $("#lbImg").alt = p.cap; $("#lbCap").textContent = p.cap; }
+function openLb(i) { cur = i; showLb(); lb.classList.add("open"); }
+function closeLb() { lb.classList.remove("open"); }
+function step(d) { if (!flat.length) return; cur = (cur + d + flat.length) % flat.length; showLb(); }
+lb.querySelector(".x").onclick = closeLb;
+lb.querySelector(".p").onclick = () => step(-1);
+lb.querySelector(".n").onclick = () => step(1);
+lb.addEventListener("click", e => { if (e.target === lb) closeLb(); });
+let tx = null;
+lb.addEventListener("touchstart", e => { tx = e.changedTouches[0].clientX; }, { passive: true });
+lb.addEventListener("touchend", e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx; tx = null;
+  if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+}, { passive: true });
+document.addEventListener("keydown", e => {
+  if (!lb.classList.contains("open")) return;
+  if (e.key === "Escape") closeLb();
+  if (e.key === "ArrowLeft") step(-1);
+  if (e.key === "ArrowRight") step(1);
+});
+$("#years").addEventListener("click", e => {
+  const fig = e.target.closest(".ph");
+  if (fig && !fig.dataset.broken) openLb(+fig.dataset.i);
+});
+$("#years").addEventListener("keydown", e => {
+  const fig = e.target.closest(".ph");
+  if (fig && !fig.dataset.broken && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openLb(+fig.dataset.i); }
+});
+
+/* ----- 7. Mở khóa quản trị: chạm 5 lần vào trái tim ở chân trang ----- */
+let taps = 0, tapTimer;
+$("#secret").addEventListener("click", () => {
+  taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { taps = 0; }, 3000);
+  if (taps >= 5) { taps = 0; auth.currentUser ? showPanel() : ($("#login").style.display = "block"); }
+});
+$("#login-close").onclick = () => { $("#login").style.display = "none"; };
+$("#admin-close").onclick = () => { $("#admin-panel").style.display = "none"; };
+
+$("#login-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("#login-err"); err.style.display = "none";
+  try {
+    await auth.signInWithEmailAndPassword($("#login-email").value.trim(), $("#login-pass").value);
+    $("#login-pass").value = "";
+    $("#login").style.display = "none";
+    showPanel();
+  } catch (ex) {
+    const bad = ["auth/invalid-credential", "auth/wrong-password", "auth/user-not-found", "auth/invalid-email"];
+    err.textContent = bad.includes(ex.code) ? "Sai email hoặc mật khẩu." : "Lỗi: " + (ex.code || ex.message);
+    err.style.display = "block";
   }
 });
-function closeAdmin() { $("#admin-panel").style.display = "none"; }
+$("#btnLogout").onclick = async () => { await auth.signOut(); $("#admin-panel").style.display = "none"; };
 
-// 5. Lưu Cấu hình chung
-function saveConfig() {
-  CONFIG.names[0] = $("#cfg-name1").value;
-  CONFIG.names[1] = $("#cfg-name2").value;
-  CONFIG.weddingDate = $("#cfg-date").value;
-  CONFIG.musicUrl = $("#cfg-music").value;
-  db.collection("settings").doc("main").update(CONFIG)
-    .then(() => alert("Đã lưu cài đặt!"))
-    .catch(err => alert("Lỗi: " + err.message));
+function showPanel() {
+  $("#cfg-name1").value = CONFIG.names[0] || "";
+  $("#cfg-name2").value = CONFIG.names[1] || "";
+  $("#cfg-date").value = CONFIG.weddingDate || "";
+  $("#cfg-music").value = CONFIG.musicUrl || "";
+  $("#adminMsg").style.display = "none";
+  $("#admin-panel").style.display = "block";
+  updateAdminLists();
+}
+function adminMsg(text, ok) {
+  const m = $("#adminMsg"); m.textContent = text; m.style.color = ok ? "green" : "#c0392b"; m.style.display = "block";
 }
 
-// 6. Xử lý thêm link ảnh (Hỗ trợ lách luật Google Drive)
-async function addPhoto() {
-  const year = parseInt($("#img-year").value);
-  const caption = $("#img-cap").value;
-  let imgUrl = $("#img-url").value.trim();
+/* ----- 8. Ghi dữ liệu (Firestore Rules chỉ cho tài khoản quản trị ghi) ----- */
+function saveAll(partial) { return DOC.set(Object.assign({}, CONFIG, partial)); }
+const cloneYears = () => JSON.parse(JSON.stringify(CONFIG.anniversaries));
 
-  if(!imgUrl) return alert("Vui lòng dán link ảnh!");
-
-  const status = $("#uploadStatus");
-  status.style.display = "block";
-  status.style.color = "blue";
-  status.textContent = "Đang lưu dữ liệu...";
-
-  // THUẬT TOÁN: Tự động trích xuất ID và ép thành link Thumbnail để không bị Google chặn
-  let driveIdMatch = imgUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || imgUrl.match(/id=([a-zA-Z0-9_-]+)/);
-  if (driveIdMatch && driveIdMatch[1]) {
-    // sz=w1000 giúp ảnh hiển thị độ phân giải cao
-    imgUrl = `https://drive.google.com/thumbnail?id=${driveIdMatch[1]}&sz=w1000`;
-  }
-
+async function saveConfig() {
+  const date = $("#cfg-date").value;
+  if (!date) return adminMsg("Vui lòng chọn ngày cưới.", false);
   try {
-    if (!CONFIG.anniversaries) CONFIG.anniversaries = [];
-    let yearData = CONFIG.anniversaries.find(a => a.year === year);
-    if (!yearData) {
-      yearData = { year: year, photos: [] };
-      CONFIG.anniversaries.push(yearData);
-    }
-    
-    yearData.photos.push({ src: imgUrl, caption: caption });
-    await db.collection("settings").doc("main").update({ anniversaries: CONFIG.anniversaries });
+    await saveAll({ names: [$("#cfg-name1").value.trim() || "Chồng", $("#cfg-name2").value.trim() || "Vợ"], weddingDate: date, musicUrl: $("#cfg-music").value.trim() || DEFAULTS.musicUrl });
+    adminMsg("Đã lưu cài đặt chung.", true);
+  } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
+}
 
-    status.style.color = "green";
-    status.textContent = "Thêm ảnh thành công! Đóng bảng này lại để xem.";
-    $("#img-url").value = ""; 
-    $("#img-cap").value = "";
-  } catch(err) {
-    status.style.color = "red";
-    status.textContent = "Lỗi: " + err.message;
+async function addPhoto() {
+  const year = parseInt($("#img-year").value, 10);
+  const caption = $("#img-cap").value.trim();
+  let url = $("#img-url").value.trim();
+  if (isNaN(year)) return adminMsg("Năm không hợp lệ.", false);
+  if (!url) return adminMsg("Vui lòng dán link ảnh.", false);
+  if (/drive\.google\.com|docs\.google\.com/.test(url)) {
+    const m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
+    if (!m) return adminMsg("Không đọc được ID ảnh từ link Google Drive.", false);
+    url = "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w1600";
   }
+  try {
+    const list = cloneYears();
+    let y = list.find(a => a.year === year);
+    if (!y) { y = { year: year, photos: [] }; list.push(y); }
+    y.photos.push({ src: url, caption: caption });
+    await saveAll({ anniversaries: list });
+    $("#img-url").value = ""; $("#img-cap").value = "";
+    adminMsg("Thêm ảnh thành công!", true);
+  } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
 }
 
-// 7. Cập nhật danh sách năm để xóa
-function updateDeleteList() {
-    const select = document.getElementById("delete-year-select");
-    select.innerHTML = "";
-    if(CONFIG.anniversaries && CONFIG.anniversaries.length > 0) {
-        CONFIG.anniversaries.forEach(a => {
-            const option = document.createElement("option");
-            option.value = a.year;
-            option.textContent = "Năm " + a.year;
-            select.appendChild(option);
-        });
-    } else {
-        select.innerHTML = "<option value=''>Chưa có dữ liệu năm nào</option>";
-    }
+async function deletePhoto(year, idx) {
+  if (!confirm("Xóa ảnh này?")) return;
+  try {
+    const list = cloneYears();
+    const y = list.find(a => a.year === year);
+    if (!y) return;
+    y.photos.splice(idx, 1);
+    await saveAll({ anniversaries: list.filter(a => a.photos.length > 0) });
+    adminMsg("Đã xóa ảnh.", true);
+  } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
 }
 
-// 8. Xóa dữ liệu của một năm
 async function deleteYearData() {
-    const yearToDelete = parseInt($("#delete-year-select").value);
-    if(isNaN(yearToDelete)) return alert("Không có năm nào để xóa.");
-    
-    if(confirm(`Bạn có chắc chắn muốn xóa TOÀN BỘ ảnh của năm ${yearToDelete} không?`)) {
-        try {
-            CONFIG.anniversaries = CONFIG.anniversaries.filter(a => a.year !== yearToDelete);
-            await db.collection("settings").doc("main").update({ anniversaries: CONFIG.anniversaries });
-            alert(`Đã xóa dữ liệu năm ${yearToDelete} thành công!`);
-        } catch (err) {
-            alert("Lỗi khi xóa: " + err.message);
-        }
-    }
+  const year = parseInt($("#delete-year-select").value, 10);
+  if (isNaN(year)) return adminMsg("Không có năm nào để xóa.", false);
+  if (!confirm("Xóa TOÀN BỘ ảnh của năm " + year + "?")) return;
+  try {
+    await saveAll({ anniversaries: cloneYears().filter(a => a.year !== year) });
+    adminMsg("Đã xóa dữ liệu năm " + year + ".", true);
+  } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
 }
+
+function updateAdminLists() {
+  const years = CONFIG.anniversaries.slice().sort((a, b) => b.year - a.year);
+  const sel = $("#delete-year-select");
+  sel.innerHTML = years.length ? years.map(a => '<option value="' + a.year + '">Năm ' + a.year + "</option>").join("") : '<option value="">Chưa có dữ liệu</option>';
+  $("#photo-list").innerHTML = years.length ? years.map(a =>
+    '<div class="yr">Năm ' + a.year + " (" + a.photos.length + " ảnh)</div>" +
+    a.photos.map((p, i) => '<div class="row"><img src="' + esc(safeUrl(p.src)) + '" alt=""><div class="t">' + esc(p.caption || "(không có caption)") +
+      '</div><button type="button" title="Xóa ảnh" data-year="' + a.year + '" data-i="' + i + '">🗑</button></div>').join("")
+  ).join("") : "<div class='hint'>Chưa có ảnh nào.</div>";
+}
+$("#photo-list").addEventListener("click", e => {
+  const b = e.target.closest("button[data-year]");
+  if (b) deletePhoto(+b.dataset.year, +b.dataset.i);
+});
+$("#btnSaveConfig").onclick = saveConfig;
+$("#btnAddPhoto").onclick = addPhoto;
+$("#btnDeleteYear").onclick = deleteYearData;
 </script>
 </body>
 </html>
