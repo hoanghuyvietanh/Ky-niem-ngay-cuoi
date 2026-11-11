@@ -44,6 +44,22 @@ Trong bảng quản trị, mục **Cài đặt chung**. Ô **Nhạc nền** nh�
 
 Cloud name và Upload preset của Cloudinary được đặt sẵn trong code (hằng `DEFAULTS` ở đầu phần `<script>` của `index.html`: `cloudName`, `uploadPreset`). Preset phải ở chế độ **Unsigned**. Nếu đổi tài khoản Cloudinary thì sửa hai giá trị đó.
 
+## Góc tâm sự (khách để lại lời chúc)
+
+Lời nhắn lưu ở collection riêng `guestnotes`. Cần thêm luật này vào Firestore Rules (trong cùng `match /databases/{database}/documents { ... }`):
+
+```
+match /guestnotes/{id} {
+  allow read: if true;
+  allow create: if request.resource.data.text is string
+                && request.resource.data.text.size() <= 120
+                && request.resource.data.author.size() <= 40;
+  allow delete: if request.auth != null && request.auth.uid == "MbkvgXFwvqPC7Xm9ZCOR2qmLz953";
+}
+```
+
+Không mở quyền ghi công khai cho `settings/main`, vì như vậy ai cũng ghi đè được dữ liệu của bạn.
+
 ## Bảo mật
 
 - Quyền ghi dữ liệu do **Firestore Rules** kiểm soát: ai cũng đọc được, chỉ tài khoản quản trị (đúng UID) mới ghi được. Không có mật khẩu nào trong code.

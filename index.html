@@ -456,6 +456,8 @@ const DEFAULTS = { names: ["Chồng", "Vợ"], weddingDate: "2024-11-20", musicU
 let CONFIG = JSON.parse(JSON.stringify(DEFAULTS));
 let wd = new Date(DEFAULTS.weddingDate + "T00:00:00");
 let flat = [], cur = 0;
+let dataLoaded = false; /* chỉ cho ghi khi đã tải được dữ liệu thật từ máy chủ */
+let guestNotes = [];
 
 function normalize(d) {
   const c = Object.assign({}, DEFAULTS, d || {});
@@ -464,7 +466,7 @@ function normalize(d) {
   c.anniversaries = c.anniversaries
     .map(a => ({ year: Number(a.year), title: a.title || "", photos: Array.isArray(a.photos) ? a.photos : [], note: a.note || "", location: a.location || "", letter: a.letter || "", unlock: a.unlock || "" }))
     .filter(a => Number.isInteger(a.year) && a.year >= 1900 && a.year <= 2200);
-  c.notes = Array.isArray(d.notes) ? d.notes : [];
+  c.notes = Array.isArray(c.notes) ? c.notes : [];
   c.musicUrl = c.musicUrl || DEFAULTS.musicUrl;
   c.cloudName = c.cloudName || DEFAULTS.cloudName;
   c.uploadPreset = c.uploadPreset || DEFAULTS.uploadPreset;
@@ -478,25 +480,23 @@ function hideNotice() { $("#notice").style.display = "none"; }
 
 /* ----- 1. Lắng nghe dữ liệu từ Firestore ----- */
 DOC.onSnapshot(
-  doc => { CONFIG = normalize(doc.exists ? doc.data() : null); hideNotice(); renderWebsite(); },
+  doc => { CONFIG = normalize(doc.exists ? doc.data() : null); dataLoaded = true; hideNotice(); renderWebsite(); },
   err => { CONFIG = normalize(null); showNotice("Không tải được dữ liệu (" + (err.code || err.message) + "). Đang hiển thị nội dung mặc định."); renderWebsite(); }
 );
 
 /* ----- Giao diện Ban đêm (Dark Mode) ----- */
 const themeBtn = $("#themeToggle");
-if (localStorage.getItem("theme") === "dark") {
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+if (lsGet("theme") === "dark") {
     document.body.classList.add("dark");
     themeBtn.textContent = "☀️";
 }
 themeBtn.onclick = () => {
     document.body.classList.toggle("dark");
-    if(document.body.classList.contains("dark")) {
-        localStorage.setItem("theme", "dark");
-        themeBtn.textContent = "☀️";
-    } else {
-        localStorage.setItem("theme", "light");
-        themeBtn.textContent = "🌙";
-    }
+    const dark = document.body.classList.contains("dark");
+    lsSet("theme", dark ? "dark" : "light");
+    themeBtn.textContent = dark ? "☀️" : "🌙";
 };
 
 /* ----- 2. Vẽ trang ----- */
@@ -555,38 +555,40 @@ function renderWebsite() {
   updateAdminLists();
 }
 
-/* ----- Vẽ Góc tâm sự ----- */
+/* ----- Vẽ Góc tâm sự (lưu ở collection riêng "guestnotes", khách được gửi, chỉ quản trị được xóa) ----- */
 function renderNotes() {
    const grid = $("#notesGrid");
-   if(!CONFIG.notes || !CONFIG.notes.length) {
+   const all = (CONFIG.notes || []).concat(guestNotes).sort((x, y) => (y.date || 0) - (x.date || 0));
+   if (!all.length) {
       grid.innerHTML = "<div class='empty' style='width:100%'>Chưa có lời nhắn nào. Hãy viết lời nhắn đầu tiên!</div>";
       return;
    }
-   grid.innerHTML = CONFIG.notes.map((n, i) => {
-      const d = new Date(n.date).toLocaleDateString("vi-VN");
+   grid.innerHTML = all.map((n, i) => {
+      const d = n.date ? new Date(n.date).toLocaleDateString("vi-VN") : "";
       return `<div class="note-item c${i % 4}">
          ${esc(n.text)}
-         <span class="note-date">${d}</span>
-         <span class="note-author">- ${esc(n.author)}</span>
+         <span class="note-date">${esc(d)}</span>
+         <span class="note-author">- ${esc(n.author || "")}</span>
       </div>`;
    }).join("");
 }
+db.collection("guestnotes").orderBy("date", "desc").limit(100).onSnapshot(
+   snap => { guestNotes = snap.docs.map(d => d.data()); renderNotes(); },
+   () => {}
+);
 
 /* ----- Gửi Lời nhắn ----- */
 $("#btnSendNote").onclick = async () => {
-   const text = $("#newNoteText").value.trim();
-   if(!text) return;
-   const author = $("#newNoteAuthor").value;
-   const newNote = { text, author, date: Date.now() };
-   
+   const text = $("#newNoteText").value.trim().slice(0, 120);
+   if (!text) return;
+   const author = String($("#newNoteAuthor").value || "").slice(0, 40);
    const btn = $("#btnSendNote");
    btn.disabled = true; btn.textContent = "...";
    try {
-       const updatedNotes = [newNote, ...(CONFIG.notes || [])];
-       await saveAll({ notes: updatedNotes });
+       await db.collection("guestnotes").add({ text, author, date: Date.now() });
        $("#newNoteText").value = "";
    } catch (err) {
-       alert("Lỗi khi gửi lời nhắn: " + err.message);
+       alert("Chưa gửi được lời nhắn (" + (err.code || err.message) + "). Nếu là permission-denied: cần thêm luật cho collection guestnotes trong Firestore Rules.");
    }
    btn.disabled = false; btn.textContent = "Gửi";
 };
@@ -1039,7 +1041,11 @@ function adminMsg(text, ok) {
 }
 
 /* ----- 8. Ghi dữ liệu (Firestore Rules chỉ cho tài khoản quản trị ghi) ----- */
-function saveAll(partial) { return DOC.set(Object.assign({}, CONFIG, partial)); }
+function saveAll(partial) {
+  if (!dataLoaded) return Promise.reject(new Error("Chưa tải được dữ liệu từ máy chủ, không lưu để tránh ghi đè mất dữ liệu. Hãy tải lại trang."));
+  /* ghi đúng các trường cần đổi, không ghi đè cả tài liệu */
+  return DOC.set(partial, { merge: true });
+}
 const cloneYears = () => JSON.parse(JSON.stringify(CONFIG.anniversaries));
 
 async function saveConfig() {
