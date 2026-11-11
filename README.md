@@ -40,7 +40,7 @@ Nên sao lưu sau mỗi lần thêm nhiều ảnh hoặc viết thư mới.
 
 ## Đổi nhạc, tên, ngày cưới
 
-Trong bảng quản trị, mục **Cài đặt chung**. File nhạc phải nằm cùng thư mục với `index.html` trên GitHub. Chỉ dùng nhạc bạn có quyền sử dụng.
+Trong bảng quản trị, mục **Cài đặt chung**. Ô **Nhạc nền** nhận nhiều bài, **mỗi dòng một bài** (tên file hoặc link MP3): các bài phát lần lượt, hết bài cuối thì quay lại bài đầu; chỉ có một bài thì lặp lại bài đó; bài nào lỗi sẽ tự được bỏ qua. File nhạc phải nằm cùng thư mục với `index.html` trên GitHub (Add file → Upload files). Chỉ dùng nhạc bạn có quyền sử dụng.
 
 Cloud name và Upload preset của Cloudinary được đặt sẵn trong code (hằng `DEFAULTS` ở đầu phần `<script>` của `index.html`: `cloudName`, `uploadPreset`). Preset phải ở chế độ **Unsigned**. Nếu đổi tài khoản Cloudinary thì sửa hai giá trị đó.
 

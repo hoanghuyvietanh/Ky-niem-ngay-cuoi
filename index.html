@@ -227,7 +227,7 @@
 
 <button id="musicToggle" class="music-btn" aria-label="Phát nhạc">🔇</button>
 <div id="musicHint" aria-hidden="true">Bấm để nghe nhạc ♪</div>
-<audio id="bgMusic" loop preload="none"></audio>
+<audio id="bgMusic" preload="none"></audio>
 
 <div id="intro" role="dialog" aria-label="Mở thiệp">
   <h2>Một món quà nhỏ ♥</h2>
@@ -313,9 +313,9 @@
     <div class="form-group"><label>Tên vợ:</label><input type="text" id="cfg-name2"></div>
     <div class="form-group"><label>Ngày cưới:</label><input type="date" id="cfg-date"></div>
     <div class="form-group">
-      <label>Nhạc nền (tên file hoặc link MP3):</label>
-      <input type="text" id="cfg-music" placeholder="NoiNayCoAnh.mp3">
-      <div class="hint">Tên file phải nằm cùng thư mục với index.html trên GitHub.</div>
+      <label>Nhạc nền (mỗi dòng một bài: tên file hoặc link MP3):</label>
+      <textarea id="cfg-music" rows="4" placeholder="NoiNayCoAnh.mp3&#10;BaiHat2.mp3&#10;BaiHat3.mp3"></textarea>
+      <div class="hint">Nhiều bài sẽ phát lần lượt, hết bài cuối thì quay lại bài đầu. Chỉ có một bài thì lặp lại bài đó. Các file mp3 phải nằm cùng thư mục với index.html trên GitHub.</div>
     </div>
     <button class="btn" type="button" id="btnSaveConfig">Lưu cài đặt chung</button>
 
@@ -607,12 +607,27 @@ setInterval(tick, 1000);
 
 /* ----- 4. Nhạc nền ----- */
 const bgMusic = $("#bgMusic"), musicBtn = $("#musicToggle");
-function setMusic(url) {
-  if (!url || bgMusic.getAttribute("src") === url) return;
+/* danh sách nhạc: mỗi dòng (hoặc cách nhau bởi dấu phẩy) một bài, phát lần lượt rồi quay vòng */
+let playlist = [], trackIdx = 0, musicSig = "", musicFails = 0;
+function parsePlaylist(s) { return String(s || "").split(/[\n,]+/).map(x => x.trim()).filter(Boolean); }
+function setMusic(str) {
+  const list = parsePlaylist(str), sig = list.join("|");
+  if (!list.length || sig === musicSig) return;
+  musicSig = sig; playlist = list; trackIdx = 0; musicFails = 0;
+  bgMusic.loop = list.length === 1;
   const wasPlaying = !bgMusic.paused;
-  bgMusic.setAttribute("src", url);
+  bgMusic.setAttribute("src", list[0]);
   if (wasPlaying) bgMusic.play().catch(() => {});
 }
+function nextTrack() {
+  if (!playlist.length) return;
+  trackIdx = (trackIdx + 1) % playlist.length;
+  if (playlist.length === 1) bgMusic.currentTime = 0;
+  else bgMusic.setAttribute("src", playlist[trackIdx]);
+  bgMusic.play().catch(() => {});
+}
+bgMusic.addEventListener("ended", nextTrack);
+bgMusic.addEventListener("playing", () => { musicFails = 0; });
 function syncMusicBtn() {
   const p = !bgMusic.paused;
   musicBtn.textContent = p ? "🎵" : "🔇";
@@ -621,7 +636,10 @@ function syncMusicBtn() {
 }
 bgMusic.addEventListener("play", syncMusicBtn);
 bgMusic.addEventListener("pause", syncMusicBtn);
-bgMusic.addEventListener("error", () => showNotice("Không phát được nhạc. Hãy kiểm tra tên file hoặc link nhạc trong phần quản trị."));
+bgMusic.addEventListener("error", () => {
+  if (playlist.length > 1 && ++musicFails < playlist.length) { nextTrack(); return; }   // bài lỗi thì nhảy sang bài kế
+  showNotice("Không phát được nhạc. Hãy kiểm tra tên file hoặc link nhạc trong phần quản trị.");
+});
 musicBtn.onclick = async () => {
   if (bgMusic.paused) { try { await bgMusic.play(); } catch (e) { showNotice("Không phát được nhạc. Hãy kiểm tra tên file hoặc link nhạc."); } }
   else bgMusic.pause();
