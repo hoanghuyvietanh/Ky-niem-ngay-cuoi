@@ -303,6 +303,12 @@
     <h2 class="sec">Ảnh đã thêm</h2>
     <div class="plist" id="photo-list"></div>
 
+    <h2 class="sec">Sao lưu và khôi phục</h2>
+    <div class="hint" style="margin-bottom:12px">Bản sao lưu là một file .json tải về thư mục Tải xuống của thiết bị bạn đang dùng. File chứa danh sách ảnh (đường dẫn), lời kể, thư tình, cài đặt; không chứa chính các tấm ảnh. Nên chép file vào Google Drive hoặc email cho chính mình, đừng đưa lên GitHub công khai.</div>
+    <button class="btn gold" type="button" id="btnBackup">Tải bản sao lưu về máy</button>
+    <button class="btn ghost" type="button" id="btnRestore" style="margin-top:10px">Khôi phục từ file sao lưu...</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+
     <h2 class="sec" style="color:#c0392b">Xóa cả một năm</h2>
     <div class="form-group"><label>Chọn năm muốn xóa toàn bộ ảnh:</label><select id="delete-year-select"></select></div>
     <button class="btn red" type="button" id="btnDeleteYear">Xóa năm này</button>
@@ -796,6 +802,33 @@ async function uploadPhotos() {
   uploading = false; $("#btnUpload").disabled = false;
 }
 
+/* ----- Sao lưu / khôi phục ----- */
+function backupData(prefix) {
+  const payload = { app: "ky-niem-ngay-cuoi", version: 1, exportedAt: new Date().toISOString(), data: CONFIG };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = prefix + "-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+
+async function restoreData(file) {
+  try {
+    const obj = JSON.parse(await file.text());
+    const d = obj && obj.app === "ky-niem-ngay-cuoi" ? obj.data : null;
+    if (!d || !Array.isArray(d.anniversaries)) return adminMsg("File này không phải bản sao lưu của trang.", false);
+    const c = normalize(d);
+    const photos = c.anniversaries.reduce((s, a) => s + a.photos.length, 0);
+    if (!confirm("Khôi phục sẽ GHI ĐÈ toàn bộ dữ liệu hiện tại bằng bản sao lưu (" + c.anniversaries.length + " năm, " + photos + " ảnh, tạo lúc " + (obj.exportedAt || "không rõ") + ").\n\nTrước khi ghi đè, trang sẽ tự tải về bản dữ liệu hiện tại để bạn có đường lùi. Tiếp tục?")) return;
+    backupData("truoc-khoi-phuc");
+    await DOC.set(c);
+    adminMsg("Đã khôi phục dữ liệu từ bản sao lưu.", true);
+  } catch (ex) {
+    adminMsg("Không khôi phục được: " + (ex.code || ex.message), false);
+  } finally { $("#restoreFile").value = ""; }
+}
+
 function fillYearInfo() {
   const y = CONFIG.anniversaries.find(a => a.year === parseInt($("#yi-year").value, 10));
   $("#yi-loc").value = y ? y.location : "";
@@ -857,6 +890,9 @@ $("#photo-list").addEventListener("click", e => {
 });
 $("#btnSaveConfig").onclick = saveConfig;
 $("#btnUpload").onclick = uploadPhotos;
+$("#btnBackup").onclick = () => { backupData("sao-luu-ky-niem"); adminMsg("Đã tải bản sao lưu về thư mục Tải xuống.", true); };
+$("#btnRestore").onclick = () => $("#restoreFile").click();
+$("#restoreFile").onchange = e => { if (e.target.files[0]) restoreData(e.target.files[0]); };
 $("#btnSaveYear").onclick = saveYearInfo;
 $("#yi-year").addEventListener("input", fillYearInfo);
 $("#btnDeleteYear").onclick = deleteYearData;

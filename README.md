@@ -21,6 +21,15 @@ Dữ liệu (tên, ngày cưới, danh sách ảnh, lời kể, thư tình) lưu
 3. Mục **Thông tin từng năm**: nhập địa điểm, lời kể ngắn, thư tình. Có thể **khóa thư đến một ngày** (ví dụ ngày kỷ niệm năm sau): trước ngày đó thư hiện ổ khóa 🔒 kèm đếm ngược. Đây chỉ là khóa vui, người rành kỹ thuật vẫn đọc được nội dung.
 4. Mục **Ảnh đã thêm**: xóa từng ảnh. Mục **Xóa cả một năm**: xóa toàn bộ ảnh của một năm.
 
+## Sao lưu và khôi phục
+
+Trong bảng quản trị, mục **Sao lưu và khôi phục**:
+
+- **Tải bản sao lưu về máy:** tải một file `sao-luu-ky-niem-<ngày>.json` vào thư mục Tải xuống. File chứa danh sách ảnh (đường dẫn), lời kể, thư tình, cài đặt; **không chứa chính các tấm ảnh** (ảnh nằm ở Cloudinary, nên giữ ảnh gốc trong máy và đừng xóa tài khoản Cloudinary). Nên chép file vào Google Drive hoặc email cho chính mình. Đừng đưa file lên GitHub công khai vì có thư tình.
+- **Khôi phục từ file sao lưu:** chọn lại file `.json`, xác nhận, dữ liệu hiện tại sẽ bị ghi đè bằng bản sao lưu. Trước khi ghi đè trang tự tải về một bản `truoc-khoi-phuc-<ngày>.json` để bạn có đường lùi.
+
+Nên sao lưu sau mỗi lần thêm nhiều ảnh hoặc viết thư mới.
+
 ## Tính năng trên trang
 
 - Màn hình mở thiệp: bấm phong bì thì nhạc tự phát.
