@@ -10,7 +10,7 @@ Web: https://hoanghuyvietanh.github.io/Ky-niem-ngay-cuoi/
 |---|---|
 | `index.html` | Toàn bộ trang web (giao diện + code) |
 | `NoiNayCoAnh.mp3` | Nhạc nền |
-| `og.png` | Ảnh hiện ra khi gửi link qua Zalo, Facebook, Messenger (nên thay bằng ảnh cưới của hai bạn, cỡ 1200x630) |
+| `og.jpg` | Ảnh cưới hiện ra khi gửi link qua Zalo, Facebook, Messenger (cỡ 1200x630) |
 
 Dữ liệu (tên, ngày cưới, danh sách ảnh, lời kể, thư tình) lưu trên **Firebase Firestore**. Ảnh lưu trên **Cloudinary**. Không có gì phải sửa trong code khi thêm nội dung mới.
 
