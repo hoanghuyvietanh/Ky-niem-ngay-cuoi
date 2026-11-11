@@ -137,6 +137,15 @@
   .ms .m small{color:var(--muted);font-size:.78rem}
   .ms .m.next{background:transparent;box-shadow:none;border:2px dashed var(--gold)}
 
+  /* ===== CÔNG CỤ / THƯ HẸN GIỜ / THỐNG KÊ VUI ===== */
+  .tools{display:flex;gap:8px;flex-wrap:wrap}
+  .tools[hidden]{display:none}
+  .tools button{border:1px solid var(--rose);background:transparent;color:var(--rose);padding:8px 16px;border-radius:999px;cursor:pointer;font-family:inherit;font-size:.9rem;transition:background .2s,color .2s}
+  .tools button:hover{background:var(--rose);color:#fff}
+  .capsule{max-width:640px;margin-bottom:22px;padding:14px 18px;border-radius:12px;border:2px dashed var(--gold);color:var(--muted);background:rgba(255,255,255,.6)}
+  .capsule strong{color:var(--gold)}
+  .fun{color:var(--muted);font-size:.9rem;margin-top:4px;min-height:1.6em;transition:opacity .4s}
+
   /* ===== LIGHTBOX ===== */
   .lb{position:fixed;inset:0;background:rgba(20,12,12,.93);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
   .lb.open{display:flex}
@@ -146,6 +155,7 @@
   .lb button{position:absolute;background:rgba(255,255,255,.14);border:0;color:#fff;font-size:1.6rem;width:46px;height:46px;border-radius:50%;cursor:pointer}
   .lb button:hover{background:rgba(255,255,255,.28)}
   .lb .x{top:18px;right:18px}
+  .lb .pl{top:18px;left:18px;font-size:1.2rem}
   .lb .p{left:12px;top:50%;transform:translateY(-50%)}
   .lb .n{right:12px;top:50%;transform:translateY(-50%)}
 
@@ -201,6 +211,7 @@
   <div class="date rise" id="wdate" style="animation-delay:.3s"></div>
   <div class="counter rise" id="counter" style="animation-delay:.45s"></div>
   <div class="days rise" id="days" style="animation-delay:.6s"></div>
+  <div class="fun rise" id="fun" style="animation-delay:.65s"></div>
   <div class="next rise" id="next" style="animation-delay:.7s"></div>
   <a class="scroll rise" href="#timeline" style="animation-delay:.8s">Xem kỷ niệm <span>↓</span></a>
 </header>
@@ -208,7 +219,13 @@
 <div id="notice" role="status"></div>
 
 <main id="timeline">
-  <div class="toolbar"><h2>Hành trình của chúng mình</h2></div>
+  <div class="toolbar">
+    <h2>Hành trình của chúng mình</h2>
+    <div class="tools" id="tools" hidden>
+      <button type="button" id="btnRandom">🎲 Kỷ niệm ngẫu nhiên</button>
+      <button type="button" id="btnShow">▶ Trình chiếu</button>
+    </div>
+  </div>
   <div id="msWrap" hidden>
     <div class="mscap">✦ Cột mốc ngày bên nhau</div>
     <div class="ms" id="milestones"></div>
@@ -222,6 +239,7 @@
 <!-- ===== LIGHTBOX ===== -->
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Xem ảnh">
   <button class="x" aria-label="Đóng">✕</button>
+  <button class="pl" aria-label="Trình chiếu">▶</button>
   <button class="p" aria-label="Ảnh trước">‹</button>
   <button class="n" aria-label="Ảnh sau">›</button>
   <figure class="lbf"><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
@@ -264,24 +282,22 @@
     <div class="form-group">
       <label>Chọn ảnh từ máy (chọn được nhiều ảnh):</label>
       <input type="file" id="img-files" accept="image/*" multiple>
-      <div class="hint">Trang tự thu nhỏ ảnh, tải lên Cloudinary và thêm vào năm đã nhập ở trên. Lời tựa bên dưới (nếu có) áp dụng cho tất cả ảnh vừa chọn.</div>
+      <div class="hint">Trang tự thu nhỏ ảnh, tải lên Cloudinary và thêm vào năm đã nhập ở trên. Chọn xong, nhập lời tựa (nếu muốn) rồi bấm nút tải lên.</div>
     </div>
+    <div class="form-group"><label>Lời tựa (không bắt buộc):</label><input type="text" id="img-cap" placeholder="Ghi chú ngắn cho các ảnh vừa chọn"></div>
     <button class="btn gold" type="button" id="btnUpload">Tải ảnh lên và thêm vào năm này</button>
     <div class="hint" id="upMsg" style="margin:8px 0 20px;min-height:1.2em"></div>
-    <div class="hint" style="margin-bottom:12px">— hoặc dán link ảnh có sẵn —</div>
-    <div class="form-group">
-      <label>Link ảnh:</label>
-      <input type="text" id="img-url" placeholder="Dán link chia sẻ Google Drive hoặc link ảnh trực tiếp">
-      <div class="hint">Ảnh trên Drive cần chia sẻ ở chế độ "Bất kỳ ai có đường liên kết".</div>
-    </div>
-    <div class="form-group"><label>Lời tựa (caption):</label><input type="text" id="img-cap" placeholder="Ghi chú ngắn cho ảnh"></div>
-    <button class="btn gold" type="button" id="btnAddPhoto">Thêm ảnh vào dòng thời gian</button>
 
     <h2 class="sec">Thông tin từng năm</h2>
     <div class="form-group"><label>Năm:</label><input type="number" id="yi-year" value="2026"></div>
     <div class="form-group"><label>Địa điểm:</label><input type="text" id="yi-loc" placeholder="Ví dụ: Đà Lạt"></div>
     <div class="form-group"><label>Lời kể ngắn:</label><input type="text" id="yi-note" placeholder="Một câu về năm này"></div>
     <div class="form-group"><label>Thư tình (hiện trong hộp thư nhỏ):</label><textarea id="yi-letter" rows="4" placeholder="Gửi vợ yêu..."></textarea></div>
+    <div class="form-group">
+      <label>Khóa thư đến ngày (không bắt buộc):</label>
+      <input type="date" id="yi-unlock">
+      <div class="hint">Trước ngày này, thư hiện ổ khóa 🔒 kèm đếm ngược, đến ngày mới mở được. Đây chỉ là "khóa vui": người rành kỹ thuật vẫn đọc được nội dung, nên đừng viết điều quá riêng tư.</div>
+    </div>
     <button class="btn gold" type="button" id="btnSaveYear">Lưu thông tin năm</button>
 
     <h2 class="sec">Ảnh đã thêm</h2>
@@ -327,7 +343,7 @@ function normalize(d) {
   if (!Array.isArray(c.names) || c.names.length < 2) c.names = DEFAULTS.names.slice();
   if (!Array.isArray(c.anniversaries)) c.anniversaries = [];
   c.anniversaries = c.anniversaries
-    .map(a => ({ year: Number(a.year), photos: Array.isArray(a.photos) ? a.photos : [], note: a.note || "", location: a.location || "", letter: a.letter || "" }))
+    .map(a => ({ year: Number(a.year), photos: Array.isArray(a.photos) ? a.photos : [], note: a.note || "", location: a.location || "", letter: a.letter || "", unlock: a.unlock || "" }))
     .filter(a => Number.isInteger(a.year) && a.year >= 1900 && a.year <= 2200);
   c.musicUrl = c.musicUrl || DEFAULTS.musicUrl;
   c.cloudName = c.cloudName || DEFAULTS.cloudName;
@@ -372,11 +388,12 @@ function renderWebsite() {
       (a.location ? '<span class="loc">📍 ' + esc(a.location) + '</span>' : "") + '</div>' +
       '<h3>' + esc(title) + '</h3>' +
       (a.note ? '<p class="note">' + esc(a.note) + '</p>' : "") +
-      (a.letter ? '<details class="letter"><summary>💌 Đọc thư tình</summary><div class="content">' + esc(a.letter) + '</div></details>' : "") +
+      letterHtml(a) +
       (photos ? '<div class="grid">' + photos + '</div>' : '<div class="empty">📷 Chưa có ảnh năm này.</div>') + '</section>';
   }).join("");
   $("#years").innerHTML = html || '<div class="empty">📷 Chưa có ảnh nào. Hãy thêm kỷ niệm đầu tiên nhé!</div>';
   $("#yearNav").innerHTML = list.map(a => '<a href="#y' + a.year + '">' + a.year + "</a>").join("");
+  $("#tools").hidden = !flat.length;
   observeReveal();
   buildHeroBg();
 
@@ -394,6 +411,20 @@ function renderWebsite() {
   tick();
   buildMilestones();
   updateAdminLists();
+}
+
+/* ----- Thư tình (có thể hẹn giờ mở) ----- */
+function letterHtml(a) {
+  if (!a.letter) return "";
+  if (a.unlock) {
+    const u = new Date(a.unlock + "T00:00:00"), t = new Date();
+    t.setHours(0, 0, 0, 0);
+    if (!isNaN(u) && u > t) {
+      const left = Math.round((u - t) / 864e5);
+      return '<div class="capsule">🔒 <strong>Thư hẹn giờ</strong> - sẽ mở vào ' + u.toLocaleDateString("vi-VN") + " (còn " + left + " ngày)</div>";
+    }
+  }
+  return '<details class="letter"><summary>💌 Đọc thư tình</summary><div class="content">' + esc(a.letter) + "</div></details>";
 }
 
 /* ----- Cột mốc ngày bên nhau ----- */
@@ -484,6 +515,7 @@ function tick() {
   $("#counter").innerHTML = box(y, "năm") + box(m, "tháng") + box(d, "ngày");
   const days = Math.floor((now - wd) / 864e5);
   $("#days").innerHTML = days >= 0 ? "Đã bên nhau <strong>" + days.toLocaleString("vi-VN") + "</strong> ngày" : "";
+  lastDays = days;
 
   const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const nx = new Date(now.getFullYear(), wd.getMonth(), wd.getDate());
@@ -501,6 +533,28 @@ function tick() {
   }
 }
 let celebrated = false;
+
+/* thống kê vui, xoay vòng dưới bộ đếm */
+let lastDays = -1, funIdx = 0;
+function funFacts(d) {
+  const n = x => Math.floor(x).toLocaleString("vi-VN");
+  return [
+    "≈ " + n(d * 24) + " giờ bên nhau",
+    "≈ " + n(d * 1440) + " phút bên nhau",
+    "≈ " + n(d * 1440 * 70) + " nhịp tim cùng đập",
+    "≈ " + n(d / 7) + " tuần cùng nhau",
+    n(d) + " lần cùng đón bình minh",
+    n(d) + " buổi tối có nhau"
+  ];
+}
+function showFun() {
+  if (lastDays < 0) return;
+  const el = $("#fun"), f = funFacts(lastDays);
+  el.style.opacity = 0;
+  setTimeout(() => { el.textContent = f[funIdx++ % f.length]; el.style.opacity = 1; }, reduced ? 0 : 400);
+}
+setInterval(showFun, 4500);
+setTimeout(showFun, 600);
 setInterval(tick, 1000);
 
 /* ----- 4. Nhạc nền ----- */
@@ -566,7 +620,20 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 const lb = $("#lb");
 function showLb() { const p = flat[cur]; $("#lbImg").src = p.src; $("#lbImg").alt = p.cap; $("#lbCap").textContent = p.cap; }
 function openLb(i) { cur = i; showLb(); lb.classList.add("open"); }
-function closeLb() { lb.classList.remove("open"); }
+function closeLb() { lb.classList.remove("open"); stopShow(); }
+
+/* trình chiếu tự động */
+let slideTimer = null;
+function stopShow() {
+  clearInterval(slideTimer); slideTimer = null;
+  const b = lb.querySelector(".pl"); b.textContent = "▶"; b.setAttribute("aria-label", "Trình chiếu");
+}
+function startShow() {
+  stopShow();
+  slideTimer = setInterval(() => step(1), 4000);
+  const b = lb.querySelector(".pl"); b.textContent = "⏸"; b.setAttribute("aria-label", "Tạm dừng");
+}
+lb.querySelector(".pl").onclick = () => (slideTimer ? stopShow() : startShow());
 function step(d) { if (!flat.length) return; cur = (cur + d + flat.length) % flat.length; showLb(); }
 lb.querySelector(".x").onclick = closeLb;
 lb.querySelector(".p").onclick = () => step(-1);
@@ -584,7 +651,19 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") closeLb();
   if (e.key === "ArrowLeft") step(-1);
   if (e.key === "ArrowRight") step(1);
+  if (e.key === " ") { e.preventDefault(); slideTimer ? stopShow() : startShow(); }
 });
+
+/* nút công cụ: kỷ niệm ngẫu nhiên, trình chiếu */
+$("#btnRandom").onclick = e => {
+  const ok = Array.from(document.querySelectorAll(".ph:not([data-broken])"));
+  if (!ok.length) return;
+  openLb(+ok[Math.floor(Math.random() * ok.length)].dataset.i);
+  burst(e.clientX, e.clientY, 14);
+};
+$("#btnShow").onclick = () => { if (!flat.length) return; openLb(0); startShow(); };
+/* mở thư: tim bay */
+$("#years").addEventListener("click", e => { if (e.target.closest("summary")) burst(e.clientX, e.clientY, 12); });
 $("#years").addEventListener("click", e => {
   const fig = e.target.closest(".ph");
   if (fig && !fig.dataset.broken) openLb(+fig.dataset.i);
@@ -717,33 +796,12 @@ async function uploadPhotos() {
   uploading = false; $("#btnUpload").disabled = false;
 }
 
-async function addPhoto() {
-  const year = parseInt($("#img-year").value, 10);
-  const caption = $("#img-cap").value.trim();
-  let url = $("#img-url").value.trim();
-  if (isNaN(year) || year < 1900) return adminMsg("Năm không hợp lệ.", false);
-  if (!url) return adminMsg("Vui lòng dán link ảnh.", false);
-  if (/drive\.google\.com|docs\.google\.com/.test(url)) {
-    const m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
-    if (!m) return adminMsg("Không đọc được ID ảnh từ link Google Drive.", false);
-    url = "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w1600";
-  }
-  try {
-    const list = cloneYears();
-    let y = list.find(a => a.year === year);
-    if (!y) { y = { year: year, photos: [] }; list.push(y); }
-    y.photos.push({ src: url, caption: caption });
-    await saveAll({ anniversaries: list });
-    $("#img-url").value = ""; $("#img-cap").value = "";
-    adminMsg("Thêm ảnh thành công!", true);
-  } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
-}
-
 function fillYearInfo() {
   const y = CONFIG.anniversaries.find(a => a.year === parseInt($("#yi-year").value, 10));
   $("#yi-loc").value = y ? y.location : "";
   $("#yi-note").value = y ? y.note : "";
   $("#yi-letter").value = y ? y.letter : "";
+  $("#yi-unlock").value = y ? y.unlock : "";
 }
 async function saveYearInfo() {
   const year = parseInt($("#yi-year").value, 10);
@@ -755,6 +813,7 @@ async function saveYearInfo() {
     y.location = $("#yi-loc").value.trim();
     y.note = $("#yi-note").value.trim();
     y.letter = $("#yi-letter").value.trim();
+    y.unlock = $("#yi-unlock").value;
     await saveAll({ anniversaries: list });
     adminMsg("Đã lưu thông tin năm " + year + ".", true);
   } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }
@@ -798,7 +857,6 @@ $("#photo-list").addEventListener("click", e => {
 });
 $("#btnSaveConfig").onclick = saveConfig;
 $("#btnUpload").onclick = uploadPhotos;
-$("#btnAddPhoto").onclick = addPhoto;
 $("#btnSaveYear").onclick = saveYearInfo;
 $("#yi-year").addEventListener("input", fillYearInfo);
 $("#btnDeleteYear").onclick = deleteYearData;
