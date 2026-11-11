@@ -146,6 +146,39 @@
   .capsule strong{color:var(--gold)}
   .fun{color:var(--muted);font-size:.9rem;margin-top:4px;min-height:1.6em;transition:opacity .4s}
 
+  /* ===== VIDEO TỔNG HỢP HÀNH TRÌNH ===== */
+  #reel{position:fixed;inset:0;z-index:700;background:#140d10;color:#f6ece8;overflow:hidden}
+  #reel[hidden]{display:none}
+  #reelBar{position:absolute;left:0;right:0;top:0;height:3px;background:rgba(255,255,255,.15);z-index:5}
+  #reelBar i{display:block;height:100%;width:0;background:var(--rose)}
+  #reelStage{position:absolute;inset:0}
+  .scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 24px 80px;opacity:0;transition:opacity .8s ease}
+  .scene.in{opacity:1}
+  .scene.out{opacity:0}
+  .scene.txt{background:radial-gradient(circle at 20% 20%,#3a1c25 0,transparent 55%),radial-gradient(circle at 80% 80%,#3a2c1c 0,transparent 55%),#140d10}
+  .scene .sm{letter-spacing:.35em;text-transform:uppercase;font-size:.8rem;color:var(--gold);margin-bottom:14px}
+  .scene .big{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,8vw,4.8rem);line-height:1.15}
+  .scene .big em{color:#e7939e;font-style:italic}
+  .scene .sub{margin-top:16px;color:#d9c6c0;max-width:640px;font-size:1.05rem}
+  .scene .letter-text{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(1.05rem,2.6vw,1.5rem);max-width:720px;max-height:64vh;overflow:auto;white-space:pre-wrap;line-height:1.8}
+  .scene.photo .bgb{position:absolute;inset:-30px;background-size:cover;background-position:center;filter:blur(28px) brightness(.45)}
+  .scene.photo .fg{position:relative;background:#fff;padding:10px 10px 12px;border-radius:4px;box-shadow:0 18px 60px rgba(0,0,0,.55);max-width:92vw}
+  .scene.photo .fg img{display:block;max-width:calc(92vw - 20px);max-height:64vh}
+  .scene.photo .fg .cap{color:#222;font-family:'Caveat','Be Vietnam Pro',cursive;font-size:1.6rem;line-height:1.2;padding-top:6px;min-height:1.4em}
+  .scene.photo .yr{position:absolute;left:22px;bottom:22px;font-family:'Playfair Display',serif;font-size:1.1rem;opacity:.75}
+  .scene.photo.in .fg{animation:kbIn var(--dur) ease-out forwards}
+  .scene.photo.alt.in .fg{animation-name:kbOut}
+  @keyframes kbIn{from{transform:scale(1)}to{transform:scale(1.07)}}
+  @keyframes kbOut{from{transform:scale(1.07)}to{transform:scale(1)}}
+  #reel.paused .fg{animation-play-state:paused}
+  .reel-ctl{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:8px;z-index:6}
+  .reel-ctl button{background:rgba(255,255,255,.14);border:0;color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.1rem;cursor:pointer;backdrop-filter:blur(6px)}
+  .reel-ctl button:hover{background:rgba(255,255,255,.28)}
+  .reel-ctl button[hidden]{display:none}
+  .endbtns{margin-top:28px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .endbtns button{background:var(--rose);color:#fff;border:0;border-radius:999px;padding:10px 22px;font-family:inherit;font-size:1rem;cursor:pointer}
+  .endbtns button+button{background:rgba(255,255,255,.14)}
+
   /* ===== LIGHTBOX ===== */
   .lb{position:fixed;inset:0;background:rgba(20,12,12,.93);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
   .lb.open{display:flex}
@@ -154,9 +187,7 @@
   .lbf figcaption{color:#222;font-family:'Caveat','Be Vietnam Pro',cursive;font-size:1.5rem;line-height:1.3;padding-top:8px;min-height:1.6em}
   .lb button{position:absolute;background:rgba(255,255,255,.14);border:0;color:#fff;font-size:1.6rem;width:46px;height:46px;border-radius:50%;cursor:pointer}
   .lb button:hover{background:rgba(255,255,255,.28)}
-  .lb .x{top:18px;right:18px}
-  .lb .pl{top:18px;left:18px;font-size:1.2rem}
-  .lb .p{left:12px;top:50%;transform:translateY(-50%)}
+  .lb .x{top:18px;right:18px}  .lb .p{left:12px;top:50%;transform:translateY(-50%)}
   .lb .n{right:12px;top:50%;transform:translateY(-50%)}
 
   /* ===== ĐĂNG NHẬP + ADMIN ===== */
@@ -184,6 +215,8 @@
     html{scroll-behavior:auto}
     .heart,.music-btn.playing,.rise,.year::before,.scroll span{animation:none}
     .ph{transition:none}
+    .scene{transition:none}
+    .scene.photo.in .fg{animation:none}
     .io .reveal{opacity:1;translate:none;transition:none}
     .hero-bg{transition:opacity 2s}
     #intro,.env,.env .flap,.env .seal{transition:none;animation:none}
@@ -222,8 +255,7 @@
   <div class="toolbar">
     <h2>Hành trình của chúng mình</h2>
     <div class="tools" id="tools" hidden>
-      <button type="button" id="btnRandom">🎲 Kỷ niệm ngẫu nhiên</button>
-      <button type="button" id="btnShow">▶ Trình chiếu</button>
+      <button type="button" id="btnShow">🎬 Xem lại cả hành trình</button>
     </div>
   </div>
   <div id="msWrap" hidden>
@@ -236,10 +268,22 @@
 
 <footer>Made with <span id="secret">♥</span> <span id="foot-names"></span></footer>
 
+<!-- ===== VIDEO TỔNG HỢP ===== -->
+<div id="reel" role="dialog" aria-modal="true" aria-label="Xem lại cả hành trình" hidden>
+  <div id="reelBar"><i></i></div>
+  <div id="reelStage"></div>
+  <div class="reel-ctl">
+    <button type="button" data-act="prev" aria-label="Cảnh trước">⏮</button>
+    <button type="button" data-act="toggle" id="reelToggle" aria-label="Tạm dừng">⏸</button>
+    <button type="button" data-act="next" aria-label="Cảnh sau">⏭</button>
+    <button type="button" data-act="fs" id="reelFs" aria-label="Toàn màn hình">⛶</button>
+    <button type="button" data-act="close" aria-label="Đóng">✕</button>
+  </div>
+</div>
+
 <!-- ===== LIGHTBOX ===== -->
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Xem ảnh">
   <button class="x" aria-label="Đóng">✕</button>
-  <button class="pl" aria-label="Trình chiếu">▶</button>
   <button class="p" aria-label="Ảnh trước">‹</button>
   <button class="n" aria-label="Ảnh sau">›</button>
   <figure class="lbf"><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
@@ -273,8 +317,6 @@
       <input type="text" id="cfg-music" placeholder="NoiNayCoAnh.mp3">
       <div class="hint">Tên file phải nằm cùng thư mục với index.html trên GitHub.</div>
     </div>
-    <div class="form-group"><label>Cloudinary - Cloud name:</label><input type="text" id="cfg-cloud" placeholder="p7pz6jna"></div>
-    <div class="form-group"><label>Cloudinary - Upload preset (Unsigned):</label><input type="text" id="cfg-preset" placeholder="Ky-niem-ngay-cuoi"></div>
     <button class="btn" type="button" id="btnSaveConfig">Lưu cài đặt chung</button>
 
     <h2 class="sec">Thêm ảnh mới</h2>
@@ -626,20 +668,7 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 const lb = $("#lb");
 function showLb() { const p = flat[cur]; $("#lbImg").src = p.src; $("#lbImg").alt = p.cap; $("#lbCap").textContent = p.cap; }
 function openLb(i) { cur = i; showLb(); lb.classList.add("open"); }
-function closeLb() { lb.classList.remove("open"); stopShow(); }
-
-/* trình chiếu tự động */
-let slideTimer = null;
-function stopShow() {
-  clearInterval(slideTimer); slideTimer = null;
-  const b = lb.querySelector(".pl"); b.textContent = "▶"; b.setAttribute("aria-label", "Trình chiếu");
-}
-function startShow() {
-  stopShow();
-  slideTimer = setInterval(() => step(1), 4000);
-  const b = lb.querySelector(".pl"); b.textContent = "⏸"; b.setAttribute("aria-label", "Tạm dừng");
-}
-lb.querySelector(".pl").onclick = () => (slideTimer ? stopShow() : startShow());
+function closeLb() { lb.classList.remove("open"); }
 function step(d) { if (!flat.length) return; cur = (cur + d + flat.length) % flat.length; showLb(); }
 lb.querySelector(".x").onclick = closeLb;
 lb.querySelector(".p").onclick = () => step(-1);
@@ -657,17 +686,9 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") closeLb();
   if (e.key === "ArrowLeft") step(-1);
   if (e.key === "ArrowRight") step(1);
-  if (e.key === " ") { e.preventDefault(); slideTimer ? stopShow() : startShow(); }
 });
 
-/* nút công cụ: kỷ niệm ngẫu nhiên, trình chiếu */
-$("#btnRandom").onclick = e => {
-  const ok = Array.from(document.querySelectorAll(".ph:not([data-broken])"));
-  if (!ok.length) return;
-  openLb(+ok[Math.floor(Math.random() * ok.length)].dataset.i);
-  burst(e.clientX, e.clientY, 14);
-};
-$("#btnShow").onclick = () => { if (!flat.length) return; openLb(0); startShow(); };
+$("#btnShow").onclick = () => startReel();
 /* mở thư: tim bay */
 $("#years").addEventListener("click", e => { if (e.target.closest("summary")) burst(e.clientX, e.clientY, 12); });
 $("#years").addEventListener("click", e => {
@@ -678,6 +699,155 @@ $("#years").addEventListener("keydown", e => {
   const fig = e.target.closest(".ph");
   if (fig && !fig.dataset.broken && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openLb(+fig.dataset.i); }
 });
+
+/* ----- 6b. Xem lại cả hành trình (trình chiếu như video tổng hợp) ----- */
+let R = null;
+
+function letterOpen(a) {
+  if (!a.letter) return false;
+  if (!a.unlock) return true;
+  const u = new Date(a.unlock + "T00:00:00"), t = new Date();
+  t.setHours(0, 0, 0, 0);
+  return isNaN(u) || u <= t;
+}
+
+function buildScenes() {
+  const out = [];
+  const ok = !isNaN(wd);
+  out.push({ type: "text", dur: 5000, html:
+    '<div class="sm">Our Love Story</div><div class="big">' + esc(CONFIG.names[0]) + " <em>&amp;</em> " + esc(CONFIG.names[1]) + "</div>" +
+    (ok ? '<div class="sub">Ngày cưới ' + esc(wd.toLocaleDateString("vi-VN", { day: "numeric", month: "long", year: "numeric" })) + "</div>" : "") });
+  CONFIG.anniversaries.filter(a => a.photos.length || a.note || a.letter).sort((a, b) => a.year - b.year).forEach(a => {
+    const nth = ok ? a.year - wd.getFullYear() : 0;
+    out.push({ type: "text", dur: 4200 + Math.min(3000, (a.note || "").length * 45), html:
+      '<div class="sm">' + a.year + '</div><div class="big">' + esc(nth > 0 ? "Kỷ niệm " + nth + " năm ngày cưới" : "Năm " + a.year) + "</div>" +
+      (a.location ? '<div class="sub">📍 ' + esc(a.location) + "</div>" : "") +
+      (a.note ? '<div class="sub">' + esc(a.note) + "</div>" : "") });
+    a.photos.forEach(p => { const src = safeUrl(p.src); if (src) out.push({ type: "photo", dur: 4500, src: src, cap: p.caption || "", year: a.year }); });
+    if (letterOpen(a)) out.push({ type: "text", dur: Math.min(16000, Math.max(6000, 4000 + a.letter.length * 55)), html:
+      '<div class="sm">💌 Thư tình ' + a.year + '</div><div class="letter-text">' + esc(a.letter) + "</div>" });
+  });
+  const days = ok ? Math.max(0, Math.floor((new Date() - wd) / 864e5)) : 0;
+  out.push({ type: "text", dur: 6000, html:
+    '<div class="sm">Và hành trình vẫn còn tiếp</div><div class="big">Đã bên nhau <em>' + days.toLocaleString("vi-VN") + '</em> ngày</div>' +
+    '<div class="sub">Hẹn gặp lại ở những kỷ niệm tiếp theo ♥</div>' +
+    '<div class="endbtns"><button type="button" data-act="replay">↻ Xem lại</button><button type="button" data-act="close">Đóng</button></div>' });
+  return out;
+}
+
+function startReel() {
+  const scenes = buildScenes();
+  if (scenes.length < 3) return;
+  if (R) stopReel();
+  let acc = 0;
+  const offs = scenes.map(s => { const o = acc; acc += s.dur; return o; });
+  R = { scenes: scenes, offs: offs, total: acc, i: 0, t: 0, last: 0, paused: false, ended: false, loading: false, raf: 0 };
+  const reel = $("#reel");
+  reel.hidden = false; reel.classList.remove("paused");
+  $("#reelToggle").textContent = "⏸";
+  $("#reelFs").hidden = !document.fullscreenEnabled;
+  document.body.classList.add("locked");
+  if (bgMusic.paused) bgMusic.play().catch(() => {});
+  gotoScene(0);
+  R.raf = requestAnimationFrame(reelLoop);
+}
+
+function stopReel() {
+  if (!R) return;
+  cancelAnimationFrame(R.raf); R = null;
+  $("#reel").hidden = true; $("#reelStage").innerHTML = "";
+  document.body.classList.remove("locked");
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+
+function gotoScene(i) {
+  if (!R) return;
+  i = Math.max(0, Math.min(i, R.scenes.length - 1));
+  const sc = R.scenes[i];
+  R.i = i; R.t = 0; R.loading = false; R.ended = i === R.scenes.length - 1;
+  const el = document.createElement("div");
+  if (sc.type === "photo") {
+    el.className = "scene photo" + (i % 2 ? " alt" : "");
+    el.style.setProperty("--dur", (sc.dur + 900) + "ms");
+    el.innerHTML = '<div class="bgb"></div><div class="fg"><img alt=""><div class="cap"></div></div><div class="yr"></div>';
+    el.querySelector(".bgb").style.backgroundImage = "url(" + JSON.stringify(sc.src) + ")";
+    el.querySelector(".cap").textContent = sc.cap;
+    el.querySelector(".yr").textContent = sc.year;
+    const img = el.querySelector("img");
+    R.loading = true;
+    const settle = good => {
+      if (!R || R.scenes[R.i] !== sc) return;
+      R.loading = false;
+      if (good) el.classList.add("in"); else nextScene();
+    };
+    img.onload = () => settle(true);
+    img.onerror = () => settle(false);
+    img.alt = sc.cap; img.src = sc.src;
+  } else {
+    el.className = "scene txt";
+    el.innerHTML = sc.html;
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("in")));
+  }
+  const stage = $("#reelStage");
+  Array.from(stage.children).forEach(o => { o.classList.remove("in"); o.classList.add("out"); setTimeout(() => o.remove(), 900); });
+  stage.appendChild(el);
+  for (let k = i + 1; k < R.scenes.length; k++) {           // nạp sẵn ảnh kế tiếp
+    if (R.scenes[k].type === "photo") { new Image().src = R.scenes[k].src; break; }
+  }
+}
+
+function nextScene() { if (R && R.i < R.scenes.length - 1) gotoScene(R.i + 1); }
+function prevScene() { if (R) gotoScene(R.t > 1500 ? R.i : R.i - 1); }
+
+function reelLoop(ts) {
+  if (!R) return;
+  const dt = R.last ? Math.min(ts - R.last, 100) : 0;
+  R.last = ts;
+  const sc = R.scenes[R.i];
+  if (!R.paused && !R.loading) {
+    if (R.ended) R.t = sc.dur;
+    else { R.t += dt; if (R.t >= sc.dur) nextScene(); }
+  }
+  if (R) $("#reelBar i").style.width = (100 * (R.offs[R.i] + Math.min(R.t, R.scenes[R.i].dur)) / R.total) + "%";
+  if (R) R.raf = requestAnimationFrame(reelLoop);
+}
+
+function toggleReel() {
+  if (!R) return;
+  R.paused = !R.paused;
+  $("#reel").classList.toggle("paused", R.paused);
+  $("#reelToggle").textContent = R.paused ? "▶" : "⏸";
+  $("#reelToggle").setAttribute("aria-label", R.paused ? "Phát" : "Tạm dừng");
+}
+
+$("#reel").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]");
+  if (!b || !R) return;
+  const act = b.dataset.act;
+  if (act === "close") stopReel();
+  else if (act === "next") nextScene();
+  else if (act === "prev") prevScene();
+  else if (act === "toggle") toggleReel();
+  else if (act === "replay") { R.paused = false; $("#reel").classList.remove("paused"); $("#reelToggle").textContent = "⏸"; gotoScene(0); }
+  else if (act === "fs") {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else $("#reel").requestFullscreen().catch(() => {});
+  }
+});
+document.addEventListener("keydown", e => {
+  if (!R) return;
+  if (e.key === "Escape") stopReel();
+  else if (e.key === " ") { e.preventDefault(); toggleReel(); }
+  else if (e.key === "ArrowRight") nextScene();
+  else if (e.key === "ArrowLeft") prevScene();
+});
+let rtx = null;
+$("#reelStage").addEventListener("touchstart", e => { rtx = e.changedTouches[0].clientX; }, { passive: true });
+$("#reelStage").addEventListener("touchend", e => {
+  if (rtx === null) return;
+  const dx = e.changedTouches[0].clientX - rtx; rtx = null;
+  if (Math.abs(dx) > 50) dx < 0 ? nextScene() : prevScene();
+}, { passive: true });
 
 /* ----- 7. Mở khóa quản trị: chạm 5 lần vào trái tim ở chân trang ----- */
 let taps = 0, tapTimer;
@@ -709,8 +879,6 @@ function showPanel() {
   $("#cfg-name2").value = CONFIG.names[1] || "";
   $("#cfg-date").value = CONFIG.weddingDate || "";
   $("#cfg-music").value = CONFIG.musicUrl || "";
-  $("#cfg-cloud").value = CONFIG.cloudName || "";
-  $("#cfg-preset").value = CONFIG.uploadPreset || "";
   $("#adminMsg").style.display = "none";
   fillYearInfo();
   $("#admin-panel").style.display = "block";
@@ -731,9 +899,7 @@ async function saveConfig() {
     await saveAll({
       names: [$("#cfg-name1").value.trim() || "Chồng", $("#cfg-name2").value.trim() || "Vợ"],
       weddingDate: date,
-      musicUrl: $("#cfg-music").value.trim() || DEFAULTS.musicUrl,
-      cloudName: $("#cfg-cloud").value.trim() || DEFAULTS.cloudName,
-      uploadPreset: $("#cfg-preset").value.trim() || DEFAULTS.uploadPreset
+      musicUrl: $("#cfg-music").value.trim() || DEFAULTS.musicUrl
     });
     adminMsg("Đã lưu cài đặt chung.", true);
   } catch (ex) { adminMsg("Lỗi: " + (ex.code || ex.message), false); }

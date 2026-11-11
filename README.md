@@ -35,12 +35,14 @@ Nên sao lưu sau mỗi lần thêm nhiều ảnh hoặc viết thư mới.
 - Màn hình mở thiệp: bấm phong bì thì nhạc tự phát.
 - Bộ đếm năm, tháng, ngày; dòng thống kê vui xoay vòng; đếm ngược tới kỷ niệm kế tiếp (đúng ngày có tim bay chúc mừng).
 - Cột mốc 100, 200, 300, 500, 1000... ngày bên nhau.
-- Nút **🎲 Kỷ niệm ngẫu nhiên** và **▶ Trình chiếu** (phím cách để tạm dừng, mũi tên để chuyển ảnh, vuốt trái phải trên điện thoại).
+- Nút **🎬 Xem lại cả hành trình**: phát toàn màn hình như một video tổng hợp, từ màn tên hai bạn, đến từng năm (tiêu đề, địa điểm, lời kể, ảnh chuyển động nhẹ, thư tình đã mở khóa), kết bằng số ngày bên nhau. Có thanh tiến trình, nút tạm dừng, tới/lui cảnh, toàn màn hình. Phím: cách = tạm dừng, mũi tên = chuyển cảnh, Esc = đóng; vuốt trái/phải trên điện thoại. Thư còn khóa sẽ không xuất hiện trong video.
 - Bấm vào tên hai bạn hoặc bộ đếm để thả tim.
 
-## Đổi nhạc, tên, ngày cưới, Cloudinary
+## Đổi nhạc, tên, ngày cưới
 
-Trong bảng quản trị, mục **Cài đặt chung**. File nhạc phải nằm cùng thư mục với `index.html` trên GitHub. Chỉ dùng nhạc bạn có quyền sử dụng. Cloud name và Upload preset (phải đặt chế độ **Unsigned**) cũng sửa ở đây.
+Trong bảng quản trị, mục **Cài đặt chung**. File nhạc phải nằm cùng thư mục với `index.html` trên GitHub. Chỉ dùng nhạc bạn có quyền sử dụng.
+
+Cloud name và Upload preset của Cloudinary được đặt sẵn trong code (hằng `DEFAULTS` ở đầu phần `<script>` của `index.html`: `cloudName`, `uploadPreset`). Preset phải ở chế độ **Unsigned**. Nếu đổi tài khoản Cloudinary thì sửa hai giá trị đó.
 
 ## Bảo mật
 
